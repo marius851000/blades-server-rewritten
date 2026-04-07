@@ -9,14 +9,16 @@ use uuid::Uuid;
 
 pub struct Session {
     pub user_id: Uuid,
+    pub secret_user_id: Uuid,
     pub extra_secret: Uuid, // a UUIDv4 just for added randomness
     pub expire_unix_timestamp: u64,
 }
 
 impl Session {
-    pub fn new(user_id: Uuid, ttl: Duration) -> Self {
+    pub fn new(user_id: Uuid, secret_user_id: Uuid, ttl: Duration) -> Self {
         Self {
             user_id,
+            secret_user_id,
             expire_unix_timestamp: match SystemTime::now().duration_since(UNIX_EPOCH) {
                 Ok(duration) => (duration + ttl - ttl / 10).as_secs(),
                 Err(e) => {

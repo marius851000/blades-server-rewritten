@@ -1,6 +1,6 @@
 use std::collections::HashSet;
 
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 pub struct Character {
@@ -11,7 +11,7 @@ pub struct UserSavedData {
     character: Character,
 }
 
-#[derive(Serialize, Debug)]
+#[derive(Deserialize, Serialize, Debug)]
 pub struct UserAccount {
     pub gp_deviceids: HashSet<String>,
     /// The user id that is actually communicated with the client, and should be kept secret
