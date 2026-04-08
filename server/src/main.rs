@@ -80,7 +80,7 @@ async fn main() -> Result<()> {
             port,
             static_data,
         } => {
-            let main_lock_client = migrate_db::migrate_db_and_check_lock(connection_string)
+            let _main_lock_client = migrate_db::migrate_db_and_check_lock(connection_string)
                 .await
                 .context("connecting to db/running migration")?;
 
@@ -110,35 +110,40 @@ async fn main() -> Result<()> {
                     .app_data(Data::new(server_global.clone()))
                     .wrap_fn(|req, srv| {
                         let start_timestamp = SystemTime::now();
+                        let is_from_blades_api =
+                            req.uri().path().starts_with("/blades.bgs.services/");
                         srv.call(req).map(move |res| match res {
                             Ok(mut res) => {
-                                res.headers_mut().insert(
-                                    HeaderName::from_static("server-request-timestamp"),
-                                    HeaderValue::from_str(&format!(
-                                        "{}",
-                                        start_timestamp
-                                            .duration_since(UNIX_EPOCH)
-                                            .map(|x| x.as_millis())
-                                            .unwrap_or(0)
-                                    ))
-                                    .unwrap(),
-                                );
-                                res.headers_mut().insert(
-                                    HeaderName::from_static("server-timestamp"),
-                                    HeaderValue::from_str(&format!(
-                                        "{}",
-                                        SystemTime::now()
-                                            .duration_since(UNIX_EPOCH)
-                                            .map(|x| x.as_millis())
-                                            .unwrap_or(0)
-                                    ))
-                                    .unwrap(),
-                                );
+                                if is_from_blades_api {
+                                    res.headers_mut().insert(
+                                        HeaderName::from_static("server-request-timestamp"),
+                                        HeaderValue::from_str(&format!(
+                                            "{}",
+                                            start_timestamp
+                                                .duration_since(UNIX_EPOCH)
+                                                .map(|x| x.as_millis())
+                                                .unwrap_or(0)
+                                        ))
+                                        .unwrap(),
+                                    );
+                                    res.headers_mut().insert(
+                                        HeaderName::from_static("server-timestamp"),
+                                        HeaderValue::from_str(&format!(
+                                            "{}",
+                                            SystemTime::now()
+                                                .duration_since(UNIX_EPOCH)
+                                                .map(|x| x.as_millis())
+                                                .unwrap_or(0)
+                                        ))
+                                        .unwrap(),
+                                    );
+                                }
                                 Ok(res)
                             }
                             Err(err) => Err(err),
                         })
                     })
+                    .service(session::sync)
                     .service(authentification::anon_log_in)
                     .service(announcements::check_status)
                     .service(

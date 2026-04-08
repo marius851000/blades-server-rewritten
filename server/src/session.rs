@@ -1,11 +1,16 @@
+use actix_web::{FromRequest, get, http::StatusCode, web};
 use log::error;
+use serde::Serialize;
 use std::{
     collections::BTreeMap,
+    future::{self, ready},
     sync::{Arc, Mutex},
     time::{Duration, SystemTime, UNIX_EPOCH},
 };
 use tokio::time::Instant;
 use uuid::Uuid;
+
+use crate::{BladeApiError, ServerGlobal};
 
 pub struct Session {
     pub user_id: Uuid,
@@ -35,6 +40,101 @@ impl Session {
 
     pub fn generate_token(&self, session_id: &Uuid) -> String {
         format!("{}|{}", session_id, self.extra_secret)
+    }
+}
+
+//TODO: FromRequest for this SessionLookupUp
+pub struct SessionLookedUp {
+    session_id: Uuid,
+    session: Arc<Session>,
+}
+
+// Read the session from the Authorization header
+pub struct SessionLookedUpMaybe(Option<SessionLookedUp>);
+
+impl SessionLookedUpMaybe {
+    pub fn get_session_or_error(&self) -> Result<&SessionLookedUp, BladeApiError> {
+        self.0
+            .as_ref()
+            .ok_or_else(|| BladeApiError::new(StatusCode::UNAUTHORIZED, 3, 43))
+    }
+}
+
+impl FromRequest for SessionLookedUpMaybe {
+    type Error = actix_web::Error;
+    type Future = future::Ready<Result<Self, Self::Error>>;
+
+    //TODO: use BladeApiError instead
+    fn from_request(
+        req: &actix_web::HttpRequest,
+        _payload: &mut actix_web::dev::Payload,
+    ) -> Self::Future {
+        let authorization = if let Some(authorization) = req.headers().get("Authorization") {
+            if let Ok(token) = authorization.to_str() {
+                token
+            } else {
+                return ready(Err(actix_web::error::ErrorBadRequest(
+                    "Authorization header can’t be parsed as str",
+                )));
+            }
+        } else {
+            return ready(Ok(SessionLookedUpMaybe(None)));
+        };
+
+        let token = if let Some(token) = authorization.split('=').skip(1).next() {
+            token
+        } else {
+            return ready(Err(actix_web::error::ErrorBadRequest(
+                "Authorization can’t be parsed (no equal sign present)",
+            )));
+        };
+
+        let mut token_splitted = token.split('|');
+        let (session_id, extra_secret) = if let Some(session_id) = token_splitted.next()
+            && let Some(extra_secret) = token_splitted.next()
+        {
+            let session_id = match Uuid::parse_str(session_id) {
+                Ok(v) => v,
+                Err(_err) => {
+                    return ready(Err(actix_web::error::ErrorBadRequest(
+                        "can’t parse session id part of the token",
+                    )));
+                }
+            };
+            let extra_secret = match Uuid::parse_str(extra_secret) {
+                Ok(v) => v,
+                Err(_err) => {
+                    return ready(Err(actix_web::error::ErrorBadRequest(
+                        "can’t parse extra secret part of the token",
+                    )));
+                }
+            };
+            (session_id, extra_secret)
+        } else {
+            return ready(Err(actix_web::error::ErrorBadRequest(
+                "Invalid token format (no |)",
+            )));
+        };
+
+        let global = req
+            .app_data::<web::Data<Arc<ServerGlobal>>>()
+            .expect("server global not in app_data (for extracting a Session)");
+        let session = if let Some(v) = global.session_store.get(session_id) {
+            v
+        } else {
+            // most likely the token expired. Should we return something specific in such case?
+            return ready(Ok(SessionLookedUpMaybe(None)));
+        };
+        if session.extra_secret == extra_secret {
+            return ready(Ok(SessionLookedUpMaybe(Some(SessionLookedUp {
+                session_id,
+                session,
+            }))));
+        } else {
+            return ready(Err(actix_web::error::ErrorUnauthorized(
+                "Invalid token (extra secret mismatch)",
+            )));
+        }
     }
 }
 
@@ -103,4 +203,17 @@ impl SessionStore {
         }
         return id;
     }
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct SyncResponse {
+    request_index: u64,
+}
+
+#[get("/blades.bgs.services/api/game/v1/public/sync")]
+async fn sync(session: SessionLookedUpMaybe) -> Result<web::Json<SyncResponse>, BladeApiError> {
+    let _session = session.get_session_or_error()?;
+    //TODO: actually implement the endpoint. Count request or something.
+    Ok(web::Json(SyncResponse { request_index: 0 }))
 }
