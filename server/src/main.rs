@@ -24,8 +24,10 @@ use log::debug;
 
 mod announcements;
 mod authentification;
+mod character;
 mod error;
 mod session;
+
 pub use error::BladeApiError;
 use tokio_postgres::Config;
 
@@ -143,9 +145,10 @@ async fn main() -> Result<()> {
                             Err(err) => Err(err),
                         })
                     })
+                    .service(announcements::check_status)
                     .service(session::sync)
                     .service(authentification::anon_log_in)
-                    .service(announcements::check_status)
+                    .service(character::list_characters)
                     .service(
                         Files::new(
                             "/bundles.blades.bgs.services/",

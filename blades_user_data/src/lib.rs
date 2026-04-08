@@ -3,6 +3,8 @@ use std::collections::HashSet;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct Character {
     name: String,
 }

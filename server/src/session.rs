@@ -45,8 +45,8 @@ impl Session {
 
 //TODO: FromRequest for this SessionLookupUp
 pub struct SessionLookedUp {
-    session_id: Uuid,
-    session: Arc<Session>,
+    pub session_id: Uuid,
+    pub session: Arc<Session>,
 }
 
 // Read the session from the Authorization header

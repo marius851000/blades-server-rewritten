@@ -86,7 +86,20 @@ pub async fn migrate_db_and_check_lock(connection_string: &str) -> anyhow::Resul
         version = 2;
     }
 
-    const EXPECTED_FINAL_VERSION: u64 = 2;
+    if version == 2 {
+        let transaction = client.transaction().await?;
+        transaction
+            .execute(
+                "CREATE TABLE characters (id UUID PRIMARY KEY, data JSONB)",
+                &[],
+            )
+            .await?;
+        make_transaction_to_version(&transaction, 3).await?;
+        transaction.commit().await?;
+        version = 3;
+    }
+
+    const EXPECTED_FINAL_VERSION: u64 = 3;
     if version != EXPECTED_FINAL_VERSION {
         bail!(
             "Expected post-migration version to be {}",
