@@ -25,13 +25,17 @@ use log::debug;
 mod announcements;
 mod authentification;
 mod character;
+mod character_data_storage;
 mod error;
 mod session;
 
 pub use error::BladeApiError;
 use tokio_postgres::Config;
 
-use crate::session::SessionStore;
+use crate::{
+    character_data_storage::{CharacterFullDataLocalConfig, CharacterFullDataLocalStorage},
+    session::SessionStore,
+};
 
 #[derive(Parser)]
 #[command(name = "blade")]
@@ -64,8 +68,9 @@ enum Commands {
 }
 
 pub struct ServerGlobal {
-    db_pool: Pool,
+    db_pool: Arc<Pool>,
     session_store: SessionStore,
+    character_storage: CharacterFullDataLocalStorage,
 }
 
 #[main]
@@ -95,14 +100,23 @@ async fn main() -> Result<()> {
                     recycling_method: deadpool_postgres::RecyclingMethod::Fast,
                 },
             );
-            let db_pool = Pool::builder(db_mgr)
-                .max_size(16)
-                .build()
-                .context("building db connection pool")?;
+            let db_pool = Arc::new(
+                Pool::builder(db_mgr)
+                    .max_size(16)
+                    .build()
+                    .context("building db connection pool")?,
+            );
+
+            let character_storage =
+                CharacterFullDataLocalStorage::new(CharacterFullDataLocalConfig {
+                    write_delay: 1, // 1 second for debug purpose, 30s should be a safer bet.
+                    db_pool: db_pool.clone(),
+                });
 
             let server_global = Arc::new(ServerGlobal {
                 db_pool,
                 session_store: SessionStore::new(Duration::from_hours(24)),
+                character_storage,
             });
 
             let static_data_clone = static_data.clone();
@@ -149,6 +163,7 @@ async fn main() -> Result<()> {
                     .service(session::sync)
                     .service(authentification::anon_log_in)
                     .service(character::list_characters)
+                    .service(character::create_characters)
                     .service(
                         Files::new(
                             "/bundles.blades.bgs.services/",

@@ -322,6 +322,7 @@ name = "blades_user_data"
 version = "0.1.0"
 dependencies = [
  "serde",
+ "serde_json",
  "uuid",
 ]
 
@@ -551,18 +552,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7d5515a3834141de9eafb9717ad39eea8247b5674e6066c404e8c4b365d2a29e"
 dependencies = [
  "cmov",
-]
-
-[[package]]
-name = "database"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "blades_user_data",
- "log",
- "mio",
- "tokio",
- "tokio-postgres",
 ]
 
 [[package]]
@@ -1663,7 +1652,6 @@ dependencies = [
  "anyhow",
  "blades_user_data",
  "clap",
- "database",
  "deadpool-postgres",
  "env_logger",
  "futures-util",

@@ -2,7 +2,6 @@ use std::{collections::HashMap, sync::Arc};
 
 use actix_web::{http::StatusCode, post, web};
 use blades_user_data::UserAccount;
-use deadpool_postgres::Status;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
