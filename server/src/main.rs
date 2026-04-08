@@ -27,6 +27,7 @@ mod authentification;
 mod character;
 mod character_data_storage;
 mod error;
+mod events;
 mod session;
 
 pub use error::BladeApiError;
@@ -164,6 +165,7 @@ async fn main() -> Result<()> {
                     .service(authentification::anon_log_in)
                     .service(character::list_characters)
                     .service(character::create_characters)
+                    .service(events::list_events)
                     .service(
                         Files::new(
                             "/bundles.blades.bgs.services/",
