@@ -35,9 +35,20 @@ async fn list_characters(
             &[&session.session.user_id.to_string()],
         )
         .await?;
-    let result = Vec::with_capacity(characters_result.len());
-    for _character_entry in characters_result.iter() {
-        todo!("load back existing characters");
+    let mut result = Vec::with_capacity(characters_result.len());
+    let mut client = app_state.db_pool.get().await.unwrap();
+    for character_entry in characters_result.iter() {
+        //TODO: convert error
+        let character_id = character_entry.get(0);
+        let character_guard = app_state
+            .character_storage
+            .get(character_id, &mut client)
+            .await
+            .unwrap();
+        result.push(CompleteCharacterWithId {
+            id: character_id,
+            character: character_guard.character.clone(),
+        });
     }
     Ok(web::Json(CharacterListResponse { characters: result }))
 }
