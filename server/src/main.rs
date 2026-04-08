@@ -4,7 +4,7 @@ use actix_files::Files;
 use actix_web::{App, HttpServer, main, web::Data};
 use anyhow::{Context, Result};
 use clap::{Parser, Subcommand};
-use database::migrate_db_and_check_lock;
+mod migrate_db;
 use deadpool_postgres::{
     Manager, ManagerConfig, Pool,
     tokio_postgres::{self, NoTls},
@@ -69,7 +69,7 @@ async fn main() -> Result<()> {
             port,
             static_data,
         } => {
-            let main_lock_client = migrate_db_and_check_lock(connection_string)
+            let main_lock_client = migrate_db::migrate_db_and_check_lock(connection_string)
                 .await
                 .context("connecting to db/running migration")?;
 
@@ -114,7 +114,7 @@ async fn main() -> Result<()> {
             .context("running the server")?;
         }
         Commands::Migrate { connection_string } => {
-            let _ = migrate_db_and_check_lock(connection_string)
+            let _ = migrate_db::migrate_db_and_check_lock(connection_string)
                 .await
                 .context("connecting to db/running migration")?;
             println!("Migration performed, database connection checked");
