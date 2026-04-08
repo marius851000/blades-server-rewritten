@@ -20,3 +20,4 @@ uuid = { version = "1.23.0", features = ["serde", "v4", "v7", "v8"] }
 tokio-postgres = { version = "0.7.17", features = ["with-serde_json-1", "with-uuid-1"] }
 rand = "0.10.0"
 actix-files = "0.6.10"
+futures-util = "0.3.32"

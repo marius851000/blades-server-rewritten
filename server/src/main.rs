@@ -1,7 +1,17 @@
-use std::{path::PathBuf, sync::Arc, time::Duration};
+use std::{
+    path::PathBuf,
+    sync::Arc,
+    time::{Duration, SystemTime, UNIX_EPOCH},
+};
 
 use actix_files::Files;
-use actix_web::{App, HttpServer, main, web::Data};
+use actix_web::{
+    App, HttpServer,
+    dev::Service,
+    http::header::{HeaderName, HeaderValue},
+    main,
+    web::Data,
+};
 use anyhow::{Context, Result};
 use clap::{Parser, Subcommand};
 mod migrate_db;
@@ -9,6 +19,7 @@ use deadpool_postgres::{
     Manager, ManagerConfig, Pool,
     tokio_postgres::{self, NoTls},
 };
+use futures_util::FutureExt;
 use log::debug;
 
 mod announcements;
@@ -97,6 +108,37 @@ async fn main() -> Result<()> {
             HttpServer::new(move || {
                 App::new()
                     .app_data(Data::new(server_global.clone()))
+                    .wrap_fn(|req, srv| {
+                        let start_timestamp = SystemTime::now();
+                        srv.call(req).map(move |res| match res {
+                            Ok(mut res) => {
+                                res.headers_mut().insert(
+                                    HeaderName::from_static("server-request-timestamp"),
+                                    HeaderValue::from_str(&format!(
+                                        "{}",
+                                        start_timestamp
+                                            .duration_since(UNIX_EPOCH)
+                                            .map(|x| x.as_millis())
+                                            .unwrap_or(0)
+                                    ))
+                                    .unwrap(),
+                                );
+                                res.headers_mut().insert(
+                                    HeaderName::from_static("server-timestamp"),
+                                    HeaderValue::from_str(&format!(
+                                        "{}",
+                                        SystemTime::now()
+                                            .duration_since(UNIX_EPOCH)
+                                            .map(|x| x.as_millis())
+                                            .unwrap_or(0)
+                                    ))
+                                    .unwrap(),
+                                );
+                                Ok(res)
+                            }
+                            Err(err) => Err(err),
+                        })
+                    })
                     .service(authentification::anon_log_in)
                     .service(announcements::check_status)
                     .service(
