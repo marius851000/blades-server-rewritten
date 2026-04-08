@@ -165,6 +165,7 @@ async fn main() -> Result<()> {
                     .service(authentification::anon_log_in)
                     .service(character::list_characters)
                     .service(character::create_characters)
+                    .service(character::get_character)
                     .service(events::list_events)
                     .service(
                         Files::new(

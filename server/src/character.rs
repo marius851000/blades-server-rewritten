@@ -1,6 +1,11 @@
 use std::sync::Arc;
 
-use actix_web::{get, http::StatusCode, post, web};
+use actix_web::{
+    get,
+    http::StatusCode,
+    post,
+    web::{self, Json},
+};
 use blades_user_data::{CompleteCharacter, CompleteInventory, PersistedCharacterData};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
@@ -51,6 +56,38 @@ async fn list_characters(
         });
     }
     Ok(web::Json(CharacterListResponse { characters: result }))
+}
+
+#[derive(Serialize)]
+struct CompleteCharacterWithIdOnly {
+    character: CompleteCharacterWithId,
+}
+
+#[get("/blades.bgs.services/api/game/v1/public/characters/{character_id}")]
+async fn get_character(
+    session: SessionLookedUpMaybe,
+    app_state: web::Data<Arc<ServerGlobal>>,
+    path: web::Path<Uuid>,
+) -> Result<Json<CompleteCharacterWithIdOnly>, BladeApiError> {
+    let session = session.get_session_or_error()?;
+    let character_id = path.into_inner();
+    let mut client = app_state.db_pool.get().await.unwrap();
+    //TODO: do not unwrap if character does not exist
+    let character = app_state
+        .character_storage
+        .get(character_id, &mut client)
+        .await
+        .unwrap();
+    if character.user_id != session.session.user_id {
+        Err(BladeApiError::unauthorized())
+    } else {
+        Ok(Json(CompleteCharacterWithIdOnly {
+            character: CompleteCharacterWithId {
+                id: character_id,
+                character: character.character.clone(),
+            },
+        }))
+    }
 }
 
 #[derive(Deserialize)]

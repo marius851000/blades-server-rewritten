@@ -41,6 +41,10 @@ impl BladeApiError {
         }
     }
 
+    pub fn unauthorized() -> Self {
+        Self::new(StatusCode::UNAUTHORIZED, 1, 200)
+    }
+
     /// Will log the error and prepare a generic internal error response
     pub fn generic_internal_error<E: Error>(error: E) -> Self {
         error!("error while processing a request: {:#?}", error);
