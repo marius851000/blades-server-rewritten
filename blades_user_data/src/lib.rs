@@ -3,6 +3,8 @@ use std::collections::HashSet;
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 use uuid::Uuid;
+mod wallet;
+pub use wallet::Wallet;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
@@ -104,6 +106,7 @@ pub struct CompleteInventory {}
 #[derive(Serialize, Deserialize, Clone, Default, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct PersistedCharacterData {
+    //This is used in query, and should stay constant across the server lifetime
     pub user_id: Uuid,
     pub character: CompleteCharacter,
     pub inventory: CompleteInventory,

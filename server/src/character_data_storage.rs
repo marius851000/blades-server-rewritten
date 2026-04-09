@@ -8,7 +8,7 @@ use std::{
 
 use anyhow::{Context, bail};
 use blades_user_data::PersistedCharacterData;
-use deadpool_postgres::{ClientWrapper, Manager, Object, Pool};
+use deadpool_postgres::{ClientWrapper, Pool};
 use tokio::time::sleep;
 use tokio_postgres::types::Json;
 use uuid::Uuid;

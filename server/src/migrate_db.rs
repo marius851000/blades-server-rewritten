@@ -21,7 +21,7 @@ pub async fn migrate_db_and_check_lock(connection_string: &str) -> anyhow::Resul
         .get(0);
     if !lock_acquired {
         bail!(
-            "Database advisory lock 10 acquired. There is likely already running server, which is at least for now not supported."
+            "Database advisory lock 10 acquired. There is likely already running server, which is not supported."
         );
     }
 
