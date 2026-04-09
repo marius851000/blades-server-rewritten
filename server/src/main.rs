@@ -13,30 +13,25 @@ use actix_web::{
     web::Data,
 };
 use anyhow::{Context, Result};
+use bb8::Pool;
 use clap::{Parser, Subcommand};
-mod migrate_db;
-use deadpool_postgres::{
-    Manager, ManagerConfig, Pool,
-    tokio_postgres::{self, NoTls},
-};
+use diesel_async::{AsyncPgConnection, pooled_connection::AsyncDieselConnectionManager};
 use futures_util::FutureExt;
 use log::debug;
 
 mod announcements;
 mod authentification;
 mod character;
-mod character_data_storage;
 mod error;
 mod events;
+mod json_db;
+pub mod models;
+pub mod schema;
 mod session;
 
 pub use error::BladeApiError;
-use tokio_postgres::Config;
 
-use crate::{
-    character_data_storage::{CharacterFullDataLocalConfig, CharacterFullDataLocalStorage},
-    session::SessionStore,
-};
+use crate::session::SessionStore;
 
 #[derive(Parser)]
 #[command(name = "blade")]
@@ -60,18 +55,13 @@ enum Commands {
         #[arg(long)]
         static_data: PathBuf,
     },
-    /// Run database migrations
-    Migrate {
-        /// Database connection string
-        #[arg(short, long)]
-        connection_string: String,
-    },
 }
 
+type DbPool = Pool<AsyncDieselConnectionManager<AsyncPgConnection>>;
+
 pub struct ServerGlobal {
-    db_pool: Arc<Pool>,
+    db_pool: DbPool,
     session_store: SessionStore,
-    character_storage: CharacterFullDataLocalStorage,
 }
 
 #[main]
@@ -88,36 +78,16 @@ async fn main() -> Result<()> {
             port,
             static_data,
         } => {
-            let _main_lock_client = migrate_db::migrate_db_and_check_lock(connection_string)
+            let db_pool = Pool::builder()
+                .build(AsyncDieselConnectionManager::<AsyncPgConnection>::new(
+                    connection_string,
+                ))
                 .await
-                .context("connecting to db/running migration")?;
-
-            let db_mgr = Manager::from_config(
-                connection_string
-                    .parse::<Config>()
-                    .expect("invalid connection string"),
-                NoTls,
-                ManagerConfig {
-                    recycling_method: deadpool_postgres::RecyclingMethod::Fast,
-                },
-            );
-            let db_pool = Arc::new(
-                Pool::builder(db_mgr)
-                    .max_size(16)
-                    .build()
-                    .context("building db connection pool")?,
-            );
-
-            let character_storage =
-                CharacterFullDataLocalStorage::new(CharacterFullDataLocalConfig {
-                    write_delay: 1, // 1 second for debug purpose, 30s should be a safer bet.
-                    db_pool: db_pool.clone(),
-                });
+                .unwrap();
 
             let server_global = Arc::new(ServerGlobal {
                 db_pool,
                 session_store: SessionStore::new(Duration::from_hours(24)),
-                character_storage,
             });
 
             let static_data_clone = static_data.clone();
@@ -180,12 +150,6 @@ async fn main() -> Result<()> {
             .run()
             .await
             .context("running the server")?;
-        }
-        Commands::Migrate { connection_string } => {
-            let _ = migrate_db::migrate_db_and_check_lock(connection_string)
-                .await
-                .context("connecting to db/running migration")?;
-            println!("Migration performed, database connection checked");
         }
     }
 

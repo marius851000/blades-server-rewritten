@@ -45,6 +45,7 @@ impl Session {
 
 //TODO: FromRequest for this SessionLookupUp
 pub struct SessionLookedUp {
+    #[allow(unused)]
     pub session_id: Uuid,
     pub session: Arc<Session>,
 }
@@ -170,6 +171,7 @@ impl SessionStore {
         Uuid::new_v8(bytes)
     }
 
+    #[allow(unused)]
     pub fn extract_creation_instant(&self, uuid: Uuid) -> Option<Instant> {
         let bytes = uuid.as_bytes();
         let ts_bytes: [u8; 8] = bytes[0..8].try_into().ok()?;

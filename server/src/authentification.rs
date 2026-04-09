@@ -2,10 +2,15 @@ use std::{collections::HashMap, sync::Arc};
 
 use actix_web::{http::StatusCode, post, web};
 use blades_user_data::UserAccount;
+use diesel::{ExpressionMethods, QueryDsl, SelectableHelper, associations::HasTable, insert_into};
+use diesel_async::RunQueryDsl;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use crate::{BladeApiError, ServerGlobal, session::Session};
+use crate::{
+    BladeApiError, ServerGlobal, json_db::JsonDbWrapper, models::UserDBEntry, schema,
+    session::Session,
+};
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -69,27 +74,33 @@ async fn anon_log_in(
     app_state: web::Data<Arc<ServerGlobal>>,
     info: web::Json<AnonLoginInfo>,
 ) -> Result<web::Json<SessionResponse>, BladeApiError> {
+    use schema::users::dsl::*;
+
     if let Some(private_user_id) = info.0.user_id {
         // load pre-existing user
         // http code 404 service 3 error code 101 if not found, apparently
-        let db = app_state.db_pool.get().await.unwrap();
-        let result = db
-            .query(
-                "SELECT id, data FROM users WHERE data->>'secret_id' = $1",
-                &[&private_user_id],
-            )
-            .await?;
-        let (user_id, user): (Uuid, tokio_postgres::types::Json<UserAccount>) =
-            if let Some(row) = result.get(0) {
-                (row.get(0), row.get(1))
-            } else {
-                return Err(BladeApiError::new(StatusCode::NOT_FOUND, 3, 101)); // user not found
-            };
+        let mut conn = app_state.db_pool.get().await.unwrap();
+        let private_user_id = match Uuid::try_parse(&private_user_id) {
+            Ok(v) => v,
+            Err(_e) => return Err(BladeApiError::new(StatusCode::NOT_FOUND, 3, 101)),
+        };
+
+        let result = users
+            .select(UserDBEntry::as_select())
+            .filter(secret_id.eq(private_user_id))
+            .load(&mut conn)
+            .await
+            .unwrap();
+        let user = if let Some(v) = result.get(0) {
+            v
+        } else {
+            return Err(BladeApiError::new(StatusCode::NOT_FOUND, 3, 101)); // user not found
+        };
 
         //TODO: some actual form of authentification.
         let session = Arc::new(Session::new(
-            user_id,
-            user.0.secret_id,
+            user.id,
+            user.secret_id,
             app_state.session_store.ttl,
         ));
         let session_id = app_state.session_store.store_new_session(session.clone());
@@ -98,20 +109,24 @@ async fn anon_log_in(
         }));
     } else {
         // create a new user
-        let mut new_user = UserAccount::create_new_user();
+        let mut new_user = UserAccount::new_random();
         if info.0.platform == "gp" {
             new_user.gp_deviceids.insert(info.0.device_id);
         } else {
             return Err(BladeApiError::new(StatusCode::BAD_REQUEST, 3, 3)); //INVALID_REQUEST_DEVICE_ID
         }
         let new_user_id = Uuid::new_v4();
-        let new_user_secret_id = new_user.secret_id;
-        let db = app_state.db_pool.get().await.unwrap();
-        db.execute(
-            "INSERT INTO users (id, data) VALUES ($1, $2)",
-            &[&new_user_id, &tokio_postgres::types::Json(new_user)],
-        )
-        .await?;
+        let new_user_secret_id = Uuid::new_v4();
+        let mut conn = app_state.db_pool.get().await.unwrap();
+        insert_into(users::table())
+            .values(UserDBEntry {
+                id: new_user_id,
+                secret_id: new_user_secret_id,
+                data: JsonDbWrapper(new_user),
+            })
+            .execute(&mut conn)
+            .await
+            .unwrap();
 
         let session = Arc::new(Session::new(
             new_user_id,

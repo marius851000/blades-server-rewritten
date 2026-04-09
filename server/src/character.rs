@@ -1,27 +1,27 @@
 use std::sync::Arc;
 
+use crate::{
+    json_db::JsonDbWrapper,
+    models::{CharacterDbEntry, CharacterDbEntryCharacterAndData},
+    schema::{self, characters},
+};
 use actix_web::{
-    get,
-    http::StatusCode,
-    post,
+    get, post,
     web::{self, Json},
 };
-use blades_user_data::{CompleteCharacter, CompleteInventory, PersistedCharacterData};
+use blades_user_data::{
+    CompleteCharacter, CompleteCharacterWithIdAndData, CompleteData, CompleteInventory,
+};
+use diesel::{ExpressionMethods, QueryDsl, SelectableHelper, insert_into};
+use diesel_async::RunQueryDsl;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use crate::{BladeApiError, ServerGlobal, session::SessionLookedUpMaybe};
 
 #[derive(Serialize)]
-struct CompleteCharacterWithId {
-    id: Uuid,
-    #[serde(flatten)]
-    character: CompleteCharacter,
-}
-
-#[derive(Serialize)]
 struct CharacterListResponse {
-    characters: Vec<CompleteCharacterWithId>,
+    characters: Vec<CompleteCharacterWithIdAndData>,
 }
 
 #[get("/blades.bgs.services/api/game/v1/public/characters")]
@@ -30,37 +30,31 @@ async fn list_characters(
     app_state: web::Data<Arc<ServerGlobal>>,
 ) -> Result<web::Json<CharacterListResponse>, BladeApiError> {
     let session = session.get_session_or_error()?;
-    let characters_result = app_state
-        .db_pool
-        .get()
-        .await
-        .unwrap()
-        .query(
-            "SELECT id FROM characters WHERE data->>'userId' = $1",
-            &[&session.session.user_id.to_string()],
-        )
-        .await?;
-    let mut result = Vec::with_capacity(characters_result.len());
-    let mut client = app_state.db_pool.get().await.unwrap();
-    for character_entry in characters_result.iter() {
-        //TODO: convert error
-        let character_id = character_entry.get(0);
-        let character_guard = app_state
-            .character_storage
-            .get(character_id, &mut client)
+    let mut conn = app_state.db_pool.get().await.unwrap();
+    let query_result = {
+        use schema::characters::dsl::*;
+        characters
+            .filter(user_id.eq(session.session.user_id))
+            .select(CharacterDbEntryCharacterAndData::as_select())
+            .load(&mut conn)
             .await
-            .unwrap();
-        result.push(CompleteCharacterWithId {
-            id: character_id,
-            character: character_guard.character.clone(),
+            .unwrap()
+    };
+
+    let mut result = Vec::with_capacity(query_result.len());
+    for character in query_result.iter() {
+        result.push(CompleteCharacterWithIdAndData {
+            id: character.id,
+            character: character.character.0.clone(),
+            data: character.data.0.clone(),
         });
     }
     Ok(web::Json(CharacterListResponse { characters: result }))
 }
 
 #[derive(Serialize)]
-struct CompleteCharacterWithIdOnly {
-    character: CompleteCharacterWithId,
+struct CompleteCharacterWithIdAndDataContainer {
+    character: CompleteCharacterWithIdAndData,
 }
 
 #[get("/blades.bgs.services/api/game/v1/public/characters/{character_id}")]
@@ -68,23 +62,33 @@ async fn get_character(
     session: SessionLookedUpMaybe,
     app_state: web::Data<Arc<ServerGlobal>>,
     path: web::Path<Uuid>,
-) -> Result<Json<CompleteCharacterWithIdOnly>, BladeApiError> {
+) -> Result<Json<CompleteCharacterWithIdAndDataContainer>, BladeApiError> {
     let session = session.get_session_or_error()?;
     let character_id = path.into_inner();
-    let mut client = app_state.db_pool.get().await.unwrap();
-    //TODO: do not unwrap if character does not exist
-    let character = app_state
-        .character_storage
-        .get(character_id, &mut client)
-        .await
-        .unwrap();
+    let mut conn = app_state.db_pool.get().await.unwrap();
+    let character_entries = {
+        use schema::characters::dsl::*;
+        characters
+            .filter(id.eq(character_id))
+            .select(CharacterDbEntryCharacterAndData::as_select())
+            .load(&mut conn)
+            .await
+            .unwrap()
+    };
+    let character = if let Some(v) = character_entries.get(0) {
+        v
+    } else {
+        //TODO: do not unwrap if character does not exist
+        panic!("no character");
+    };
     if character.user_id != session.session.user_id {
         Err(BladeApiError::unauthorized())
     } else {
-        Ok(Json(CompleteCharacterWithIdOnly {
-            character: CompleteCharacterWithId {
+        Ok(Json(CompleteCharacterWithIdAndDataContainer {
+            character: CompleteCharacterWithIdAndData {
                 id: character_id,
-                character: character.character.clone(),
+                character: character.character.0.clone(),
+                data: character.data.0.clone(),
             },
         }))
     }
@@ -94,6 +98,7 @@ async fn get_character(
 struct DataOnlyCustomization {
     customization: serde_json::Value,
 }
+
 #[derive(Deserialize)]
 struct CharacterCreationRequest {
     name: String,
@@ -102,7 +107,7 @@ struct CharacterCreationRequest {
 
 #[derive(Serialize)]
 struct CharacterCreationResponse {
-    character: CompleteCharacterWithId,
+    character: CompleteCharacterWithIdAndData,
     inventory: CompleteInventory,
 }
 
@@ -113,45 +118,39 @@ async fn create_characters(
     body: web::Json<CharacterCreationRequest>,
 ) -> Result<web::Json<CharacterCreationResponse>, BladeApiError> {
     let session = session.get_session_or_error()?;
-    let characters_result = app_state
-        .db_pool
-        .get()
-        .await
-        .unwrap()
-        .query(
-            "SELECT id FROM characters WHERE data->>'user_id' = $1",
-            &[&session.session.user_id.to_string()],
-        )
-        .await?;
-    if characters_result.len() > 0 {
-        // a character already exist
-        return Err(BladeApiError::new(StatusCode::FORBIDDEN, 1101, 3));
-    }
+
     //TODO: make sure the user name, or at least the tag id, is unique. Good luck getting it to work with the current (lack of) transaction model. An extra unique key in the table?
-    let mut new_complete_data = PersistedCharacterData::default();
-    new_complete_data.user_id = session.session.user_id;
-    new_complete_data.character.name = body.name.clone();
-    new_complete_data.character.data.customization = body.0.data.customization;
-    //TODO: default inventory
+    let mut new_character = CompleteCharacter::default();
+    new_character.name = body.name.clone();
+
+    let mut new_data = CompleteData::default();
+    new_data.customization = body.0.data.customization;
+
     let character_uuid = Uuid::new_v4();
-    let mut client = app_state.db_pool.get().await.unwrap();
+
+    let to_insert = CharacterDbEntry {
+        id: character_uuid,
+        user_id: session.session.user_id,
+        character: JsonDbWrapper(new_character),
+        data: JsonDbWrapper(new_data),
+    };
+
+    let mut conn = app_state.db_pool.get().await.unwrap();
     //TODO: convert error
-    app_state
-        .character_storage
-        .add_new_character(client.as_mut(), character_uuid, new_complete_data)
+    //TODO: explicit no async commit (start a new transaction)
+    insert_into(characters::table)
+        .values(&to_insert)
+        .execute(&mut conn)
         .await
         .unwrap();
-    //TODO: convert error
-    let character = app_state
-        .character_storage
-        .get(character_uuid, client.as_mut())
-        .await
-        .unwrap();
+
     Ok(web::Json(CharacterCreationResponse {
-        character: CompleteCharacterWithId {
+        character: CompleteCharacterWithIdAndData {
             id: character_uuid,
-            character: character.character.clone(),
+            character: to_insert.character.0,
+            data: to_insert.data.0,
         },
-        inventory: character.inventory.clone(),
+        //TODO: actually handle the inventory (including the default loadout)
+        inventory: CompleteInventory::default(),
     }))
 }

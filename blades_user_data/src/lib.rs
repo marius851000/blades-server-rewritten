@@ -57,7 +57,6 @@ pub struct CompleteCharacter {
     pub trophy_count_modified: i64,
     pub pvp_season_id: Uuid,
     pub job_difficulty_cycle_index: i64,
-    pub data: CompleteData,
     pub validation_flags: u32,
     pub trasury_level: u32,
     //avatar_icon_id
@@ -96,34 +95,37 @@ impl Default for CompleteCharacter {
             validation_flags: 1,
             trasury_level: 0,
             name_validated: true,
-            data: CompleteData::default(),
         }
     }
 }
-#[derive(Serialize, Deserialize, Clone, Default, Debug)]
-pub struct CompleteInventory {}
+
+#[derive(Serialize)]
+pub struct CompleteCharacterWithIdWithoutData {
+    pub id: Uuid,
+    #[serde(flatten)]
+    pub character: CompleteCharacter,
+}
+
+#[derive(Serialize)]
+pub struct CompleteCharacterWithIdAndData {
+    pub data: CompleteData,
+    pub id: Uuid,
+    #[serde(flatten)]
+    pub character: CompleteCharacter,
+}
 
 #[derive(Serialize, Deserialize, Clone, Default, Debug)]
-#[serde(rename_all = "camelCase")]
-pub struct PersistedCharacterData {
-    //This is used in query, and should stay constant across the server lifetime
-    pub user_id: Uuid,
-    pub character: CompleteCharacter,
-    pub inventory: CompleteInventory,
-}
+pub struct CompleteInventory {}
 
 #[derive(Deserialize, Serialize, Debug)]
 pub struct UserAccount {
     pub gp_deviceids: HashSet<String>,
-    /// The user id that is actually communicated with the client, and should be kept secret
-    pub secret_id: Uuid,
 }
 
 impl UserAccount {
-    pub fn create_new_user() -> Self {
+    pub fn new_random() -> Self {
         UserAccount {
             gp_deviceids: HashSet::default(),
-            secret_id: Uuid::new_v4(),
         }
     }
 }
