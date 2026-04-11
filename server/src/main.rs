@@ -19,9 +19,11 @@ use diesel_async::{AsyncPgConnection, pooled_connection::AsyncDieselConnectionMa
 use futures_util::FutureExt;
 use log::debug;
 
+mod abyss;
 mod announcements;
 mod authentification;
 mod character;
+mod dungeon;
 mod error;
 mod events;
 mod inventory;
@@ -142,6 +144,8 @@ async fn main() -> Result<()> {
                     .service(wallet::get_wallet)
                     .service(inventory::get_inventory)
                     .service(events::list_events)
+                    .service(dungeon::get_dungeons)
+                    .service(abyss::get_abyss)
                     .service(
                         Files::new(
                             "/bundles.blades.bgs.services/",
