@@ -5,6 +5,9 @@ use serde_json::{Value, json};
 use uuid::Uuid;
 mod wallet;
 pub use wallet::CompleteWallet;
+mod backpack;
+pub use backpack::*;
+mod util;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
@@ -113,9 +116,6 @@ pub struct CompleteCharacterWithIdAndData {
     #[serde(flatten)]
     pub character: CompleteCharacter,
 }
-
-#[derive(Serialize, Deserialize, Clone, Default, Debug)]
-pub struct CompleteInventory {}
 
 #[derive(Deserialize, Serialize, Debug)]
 pub struct UserAccount {

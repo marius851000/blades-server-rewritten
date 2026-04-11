@@ -1,4 +1,6 @@
-use blades_user_data::{CompleteCharacter, CompleteData, CompleteWallet, UserAccount};
+use blades_user_data::{
+    CompleteCharacter, CompleteData, CompleteInventory, CompleteWallet, UserAccount,
+};
 use diesel::prelude::*;
 use uuid::Uuid;
 
@@ -23,7 +25,7 @@ pub struct CharacterDbEntry {
     pub character: JsonDbWrapper<CompleteCharacter>,
     pub data: JsonDbWrapper<CompleteData>,
     pub wallet: JsonDbWrapper<CompleteWallet>,
-    //TODO: inventory
+    pub inventory: JsonDbWrapper<CompleteInventory>,
 }
 
 #[derive(Queryable, Selectable)]
