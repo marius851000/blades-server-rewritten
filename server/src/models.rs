@@ -31,6 +31,21 @@ pub struct CharacterDbEntry {
 #[derive(Queryable, Selectable)]
 #[diesel(table_name = crate::schema::characters)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
+pub struct CharacterDbEntryCharacterAlone {
+    pub id: Uuid,
+    pub user_id: Uuid,
+    pub character: JsonDbWrapper<CompleteCharacter>,
+}
+
+impl CharacterHolder for CharacterDbEntryCharacterAlone {
+    fn get_user_id(&self) -> &Uuid {
+        &self.user_id
+    }
+}
+
+#[derive(Queryable, Selectable)]
+#[diesel(table_name = crate::schema::characters)]
+#[diesel(check_for_backend(diesel::pg::Pg))]
 pub struct CharacterDbEntryCharacterAndData {
     pub id: Uuid,
     pub user_id: Uuid,

@@ -22,19 +22,20 @@ use log::debug;
 mod abyss;
 mod announcements;
 mod authentification;
+mod challenge;
 mod character;
+mod craft;
 mod dungeon;
 mod error;
 mod events;
 mod inventory;
-mod town;
-mod craft;
-mod session;
-mod util;
-mod wallet;
 mod json_db;
 pub mod models;
 pub mod schema;
+mod session;
+mod town;
+mod util;
+mod wallet;
 
 pub use error::BladeApiError;
 
@@ -69,7 +70,7 @@ type DbPool = Pool<AsyncDieselConnectionManager<AsyncPgConnection>>;
 pub struct ServerGlobal {
     db_pool: DbPool,
     session_store: SessionStore,
-    static_data_path: PathBuf
+    static_data_path: PathBuf,
 }
 
 #[main]
@@ -152,6 +153,7 @@ async fn main() -> Result<()> {
                     .service(abyss::get_abyss)
                     .service(town::get_town)
                     .service(craft::get_crafts)
+                    .service(challenge::get_challenges)
                     .service(
                         Files::new(
                             "/bundles.blades.bgs.services/",
