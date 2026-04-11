@@ -27,12 +27,14 @@ mod dungeon;
 mod error;
 mod events;
 mod inventory;
-mod json_db;
-pub mod models;
-pub mod schema;
+mod town;
+mod craft;
 mod session;
 mod util;
 mod wallet;
+mod json_db;
+pub mod models;
+pub mod schema;
 
 pub use error::BladeApiError;
 
@@ -67,6 +69,7 @@ type DbPool = Pool<AsyncDieselConnectionManager<AsyncPgConnection>>;
 pub struct ServerGlobal {
     db_pool: DbPool,
     session_store: SessionStore,
+    static_data_path: PathBuf
 }
 
 #[main]
@@ -93,6 +96,7 @@ async fn main() -> Result<()> {
             let server_global = Arc::new(ServerGlobal {
                 db_pool,
                 session_store: SessionStore::new(Duration::from_hours(24)),
+                static_data_path: static_data.clone(),
             });
 
             let static_data_clone = static_data.clone();
@@ -146,6 +150,8 @@ async fn main() -> Result<()> {
                     .service(events::list_events)
                     .service(dungeon::get_dungeons)
                     .service(abyss::get_abyss)
+                    .service(town::get_town)
+                    .service(craft::get_crafts)
                     .service(
                         Files::new(
                             "/bundles.blades.bgs.services/",
