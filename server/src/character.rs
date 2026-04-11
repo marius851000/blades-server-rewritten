@@ -4,6 +4,7 @@ use crate::{
     json_db::JsonDbWrapper,
     models::{CharacterDbEntry, CharacterDbEntryCharacterAndData},
     schema::{self, characters},
+    util::get_only_single_character_and_check_permission,
 };
 use actix_web::{
     get, post,
@@ -11,6 +12,7 @@ use actix_web::{
 };
 use blades_user_data::{
     CompleteCharacter, CompleteCharacterWithIdAndData, CompleteData, CompleteInventory,
+    CompleteWallet,
 };
 use diesel::{ExpressionMethods, QueryDsl, SelectableHelper, insert_into};
 use diesel_async::RunQueryDsl;
@@ -75,23 +77,17 @@ async fn get_character(
             .await
             .unwrap()
     };
-    let character = if let Some(v) = character_entries.get(0) {
-        v
-    } else {
-        //TODO: do not unwrap if character does not exist
-        panic!("no character");
-    };
-    if character.user_id != session.session.user_id {
-        Err(BladeApiError::unauthorized())
-    } else {
-        Ok(Json(CompleteCharacterWithIdAndDataContainer {
-            character: CompleteCharacterWithIdAndData {
-                id: character_id,
-                character: character.character.0.clone(),
-                data: character.data.0.clone(),
-            },
-        }))
-    }
+
+    let character =
+        get_only_single_character_and_check_permission(character_entries, &session.session)?;
+
+    Ok(Json(CompleteCharacterWithIdAndDataContainer {
+        character: CompleteCharacterWithIdAndData {
+            id: character_id,
+            character: character.character.0.clone(),
+            data: character.data.0.clone(),
+        },
+    }))
 }
 
 #[derive(Deserialize)]
@@ -133,6 +129,7 @@ async fn create_characters(
         user_id: session.session.user_id,
         character: JsonDbWrapper(new_character),
         data: JsonDbWrapper(new_data),
+        wallet: JsonDbWrapper(CompleteWallet::default()),
     };
 
     let mut conn = app_state.db_pool.get().await.unwrap();

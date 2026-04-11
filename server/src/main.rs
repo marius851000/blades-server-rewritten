@@ -28,6 +28,8 @@ mod json_db;
 pub mod models;
 pub mod schema;
 mod session;
+mod util;
+mod wallet;
 
 pub use error::BladeApiError;
 
@@ -136,6 +138,7 @@ async fn main() -> Result<()> {
                     .service(character::list_characters)
                     .service(character::create_characters)
                     .service(character::get_character)
+                    .service(wallet::get_wallet)
                     .service(events::list_events)
                     .service(
                         Files::new(

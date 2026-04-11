@@ -12,14 +12,14 @@ struct WalletEntry {
     balance: u64,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct Wallet(
+#[derive(Serialize, Deserialize, Debug, Clone, Default)]
+pub struct CompleteWallet(
     #[serde(
         rename = "wallet",
         serialize_with = "serialize_wallets",
         deserialize_with = "deserialize_wallets"
     )]
-    HashMap<Uuid, u64>,
+    pub HashMap<Uuid, u64>,
 );
 
 fn serialize_wallets<S>(wallets: &HashMap<Uuid, u64>, serializer: S) -> Result<S::Ok, S::Error>

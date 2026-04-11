@@ -1,8 +1,8 @@
-use blades_user_data::{CompleteCharacter, CompleteData, UserAccount};
+use blades_user_data::{CompleteCharacter, CompleteData, CompleteWallet, UserAccount};
 use diesel::prelude::*;
 use uuid::Uuid;
 
-use crate::json_db::JsonDbWrapper;
+use crate::{json_db::JsonDbWrapper, util::CharacterHolder};
 
 #[derive(Queryable, Selectable, Insertable)]
 #[diesel(table_name = crate::schema::users)]
@@ -22,6 +22,8 @@ pub struct CharacterDbEntry {
     pub user_id: Uuid,
     pub character: JsonDbWrapper<CompleteCharacter>,
     pub data: JsonDbWrapper<CompleteData>,
+    pub wallet: JsonDbWrapper<CompleteWallet>,
+    //TODO: inventory
 }
 
 #[derive(Queryable, Selectable)]
@@ -32,4 +34,25 @@ pub struct CharacterDbEntryCharacterAndData {
     pub user_id: Uuid,
     pub character: JsonDbWrapper<CompleteCharacter>,
     pub data: JsonDbWrapper<CompleteData>,
+}
+
+impl CharacterHolder for CharacterDbEntryCharacterAndData {
+    fn get_user_id(&self) -> &Uuid {
+        &self.user_id
+    }
+}
+
+#[derive(Queryable, Selectable)]
+#[diesel(table_name = crate::schema::characters)]
+#[diesel(check_for_backend(diesel::pg::Pg))]
+pub struct CharacterDbEntryWallet {
+    pub user_id: Uuid,
+    pub character: JsonDbWrapper<CompleteCharacter>,
+    pub wallet: JsonDbWrapper<CompleteWallet>,
+}
+
+impl CharacterHolder for CharacterDbEntryWallet {
+    fn get_user_id(&self) -> &Uuid {
+        &self.user_id
+    }
 }

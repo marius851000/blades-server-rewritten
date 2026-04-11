@@ -6,6 +6,8 @@ diesel::table! {
         user_id -> Uuid,
         character -> Jsonb,
         data -> Jsonb,
+        inventory -> Jsonb,
+        wallet -> Jsonb,
     }
 }
 

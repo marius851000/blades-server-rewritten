@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 use uuid::Uuid;
 mod wallet;
-pub use wallet::Wallet;
+pub use wallet::CompleteWallet;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
