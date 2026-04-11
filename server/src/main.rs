@@ -24,6 +24,7 @@ mod authentification;
 mod character;
 mod error;
 mod events;
+mod inventory;
 mod json_db;
 pub mod models;
 pub mod schema;
@@ -139,6 +140,7 @@ async fn main() -> Result<()> {
                     .service(character::create_characters)
                     .service(character::get_character)
                     .service(wallet::get_wallet)
+                    .service(inventory::get_inventory)
                     .service(events::list_events)
                     .service(
                         Files::new(

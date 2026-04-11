@@ -58,3 +58,17 @@ impl CharacterHolder for CharacterDbEntryWallet {
         &self.user_id
     }
 }
+
+#[derive(Queryable, Selectable)]
+#[diesel(table_name = crate::schema::characters)]
+#[diesel(check_for_backend(diesel::pg::Pg))]
+pub struct CharacterDbEntryInventory {
+    pub user_id: Uuid,
+    pub inventory: JsonDbWrapper<CompleteInventory>,
+}
+
+impl CharacterHolder for CharacterDbEntryInventory {
+    fn get_user_id(&self) -> &Uuid {
+        &self.user_id
+    }
+}
