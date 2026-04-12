@@ -1,4 +1,7 @@
-use actix_web::{post, web::{self, Json}};
+use actix_web::{
+    post,
+    web::{self, Json},
+};
 use blades_user_data::CompleteCharacterWithIdWithoutData;
 use diesel::{ExpressionMethods, QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;

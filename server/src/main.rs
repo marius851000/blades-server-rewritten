@@ -20,6 +20,7 @@ use futures_util::FutureExt;
 use log::debug;
 
 mod abyss;
+mod analytics_events;
 mod announcements;
 mod authentification;
 mod challenge;
@@ -27,7 +28,7 @@ mod character;
 mod craft;
 mod dungeon;
 mod error;
-mod events;
+mod gameevent;
 mod inventory;
 mod json_db;
 pub mod models;
@@ -148,12 +149,13 @@ async fn main() -> Result<()> {
                     .service(character::get_character)
                     .service(wallet::get_wallet)
                     .service(inventory::get_inventory)
-                    .service(events::list_events)
+                    .service(analytics_events::list_events)
                     .service(dungeon::get_dungeons)
                     .service(abyss::get_abyss)
                     .service(town::get_town)
                     .service(craft::get_crafts)
                     .service(challenge::get_challenges)
+                    .service(gameevent::get_game_events)
                     .service(
                         Files::new(
                             "/bundles.blades.bgs.services/",
