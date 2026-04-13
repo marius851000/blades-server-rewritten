@@ -32,6 +32,7 @@ mod gameevent;
 mod inventory;
 mod json_db;
 pub mod models;
+mod quest;
 pub mod schema;
 mod session;
 mod town;
@@ -156,6 +157,7 @@ async fn main() -> Result<()> {
                     .service(craft::get_crafts)
                     .service(challenge::get_challenges)
                     .service(gameevent::get_game_events)
+                    .service(quest::get_quests)
                     .service(
                         Files::new(
                             "/bundles.blades.bgs.services/",

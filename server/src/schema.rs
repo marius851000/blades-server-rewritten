@@ -12,6 +12,15 @@ diesel::table! {
 }
 
 diesel::table! {
+    quests (id) {
+        id -> Uuid,
+        character_id -> Uuid,
+        info -> Jsonb,
+        generated_data -> Jsonb,
+    }
+}
+
+diesel::table! {
     users (id) {
         id -> Uuid,
         secret_id -> Uuid,
@@ -20,5 +29,6 @@ diesel::table! {
 }
 
 diesel::joinable!(characters -> users (user_id));
+diesel::joinable!(quests -> characters (character_id));
 
-diesel::allow_tables_to_appear_in_same_query!(characters, users,);
+diesel::allow_tables_to_appear_in_same_query!(characters, quests, users,);

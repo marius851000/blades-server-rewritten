@@ -1,5 +1,6 @@
 use blades_user_data::{
-    CompleteCharacter, CompleteData, CompleteInventory, CompleteWallet, UserAccount,
+    CompleteCharacter, CompleteData, CompleteInventory, CompleteWallet, DungeonGeneratedData,
+    Quest, UserAccount,
 };
 use diesel::prelude::*;
 use uuid::Uuid;
@@ -86,4 +87,22 @@ impl CharacterHolder for CharacterDbEntryInventory {
     fn get_user_id(&self) -> &Uuid {
         &self.user_id
     }
+}
+
+#[derive(Queryable, Selectable)]
+#[diesel(table_name = crate::schema::characters)]
+#[diesel(check_for_backend(diesel::pg::Pg))]
+pub struct CharacterDbAlone {
+    pub id: Uuid,
+    pub user_id: Uuid,
+}
+
+#[derive(Queryable, Selectable, Insertable)]
+#[diesel(table_name = crate::schema::quests)]
+#[diesel(check_for_backend(diesel::pg::Pg))]
+pub struct QuestDbEntry {
+    pub id: Uuid,
+    pub character_id: Uuid,
+    pub info: JsonDbWrapper<Quest>,
+    pub generated_data: JsonDbWrapper<Option<DungeonGeneratedData>>,
 }

@@ -7,6 +7,10 @@ mod wallet;
 pub use wallet::CompleteWallet;
 mod backpack;
 pub use backpack::*;
+mod dungeon;
+pub use dungeon::*;
+mod quest;
+pub use quest::*;
 mod util;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
