@@ -29,7 +29,8 @@ mod craft;
 mod dungeon;
 mod error;
 mod gameevent;
-mod global_shops;
+mod global_gift;
+mod global_shop;
 mod inventory;
 mod json_db;
 pub mod models;
@@ -159,8 +160,9 @@ async fn main() -> Result<()> {
                     .service(challenge::get_challenges)
                     .service(gameevent::get_game_events)
                     .service(quest::get_quests)
-                    .service(global_shops::get_override)
-                    .service(global_shops::get_global_shop_for_character)
+                    .service(global_shop::get_override)
+                    .service(global_shop::get_global_shop_for_character)
+                    .service(global_gift::get_global_gifts)
                     .service(
                         Files::new(
                             "/bundles.blades.bgs.services/",
