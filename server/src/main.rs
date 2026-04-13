@@ -25,6 +25,7 @@ mod announcements;
 mod authentification;
 mod challenge;
 mod character;
+mod character_data;
 mod craft;
 mod dungeon;
 mod error;
@@ -163,6 +164,7 @@ async fn main() -> Result<()> {
                     .service(global_shop::get_override)
                     .service(global_shop::get_global_shop_for_character)
                     .service(global_gift::get_global_gifts)
+                    .service(character_data::update_data)
                     .service(
                         Files::new(
                             "/bundles.blades.bgs.services/",

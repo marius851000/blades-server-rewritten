@@ -11,8 +11,9 @@ use actix_web::{
     web::{self, Json},
 };
 use blades_user_data::{
-    Backpack, CompleteCharacter, CompleteCharacterWithIdAndData, CompleteData, CompleteInventory,
-    CompleteWallet, EquippedItems, Item, ItemPropertiesAll, Loadout, SingleEquippedItem, Treasury,
+    Backpack, CompleteCharacter, CompleteCharacterData, CompleteCharacterWithIdAndData,
+    CompleteInventory, CompleteWallet, EquippedItems, Item, ItemPropertiesAll, Loadout,
+    SingleEquippedItem, Treasury,
 };
 use diesel::{ExpressionMethods, QueryDsl, SelectableHelper, insert_into};
 use diesel_async::RunQueryDsl;
@@ -119,7 +120,7 @@ async fn create_characters(
     let mut new_character = CompleteCharacter::default();
     new_character.name = body.name.clone();
 
-    let mut new_data = CompleteData::default();
+    let mut new_data = CompleteCharacterData::default();
     new_data.customization = body.0.data.customization;
 
     let character_uuid = Uuid::new_v4();

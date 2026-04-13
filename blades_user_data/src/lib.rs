@@ -15,14 +15,18 @@ mod util;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
-pub struct CompleteData {
+pub struct CompleteCharacterData {
     pub customization: Value,
+    #[serde(rename = "new-flags")]
+    #[serde(default)]
+    pub new_flags: Value,
 }
 
-impl Default for CompleteData {
+impl Default for CompleteCharacterData {
     fn default() -> Self {
-        CompleteData {
+        CompleteCharacterData {
             customization: json!({}),
+            new_flags: json!({}),
         }
     }
 }
@@ -115,7 +119,7 @@ pub struct CompleteCharacterWithIdWithoutData {
 
 #[derive(Serialize)]
 pub struct CompleteCharacterWithIdAndData {
-    pub data: CompleteData,
+    pub data: CompleteCharacterData,
     pub id: Uuid,
     #[serde(flatten)]
     pub character: CompleteCharacter,

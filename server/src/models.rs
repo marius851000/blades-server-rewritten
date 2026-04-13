@@ -1,6 +1,6 @@
 use blades_user_data::{
-    CompleteCharacter, CompleteData, CompleteInventory, CompleteWallet, DungeonGeneratedData,
-    Quest, UserAccount,
+    CompleteCharacter, CompleteCharacterData, CompleteInventory, CompleteWallet,
+    DungeonGeneratedData, Quest, UserAccount,
 };
 use diesel::prelude::*;
 use uuid::Uuid;
@@ -24,7 +24,7 @@ pub struct CharacterDbEntry {
     pub id: Uuid,
     pub user_id: Uuid,
     pub character: JsonDbWrapper<CompleteCharacter>,
-    pub data: JsonDbWrapper<CompleteData>,
+    pub data: JsonDbWrapper<CompleteCharacterData>,
     pub wallet: JsonDbWrapper<CompleteWallet>,
     pub inventory: JsonDbWrapper<CompleteInventory>,
 }
@@ -51,7 +51,7 @@ pub struct CharacterDbEntryCharacterAndData {
     pub id: Uuid,
     pub user_id: Uuid,
     pub character: JsonDbWrapper<CompleteCharacter>,
-    pub data: JsonDbWrapper<CompleteData>,
+    pub data: JsonDbWrapper<CompleteCharacterData>,
 }
 
 impl CharacterHolder for CharacterDbEntryCharacterAndData {
