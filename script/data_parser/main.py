@@ -232,7 +232,7 @@ if __name__ == "__main__":
                         "spawn_info": {
                             "chest": chest_spawn_info,
                             "item": item_spawn_info,
-                            "enemySpawnGroups": enemy_spawn_info
+                            "enemy_spawn_groups": enemy_spawn_info
                         },
                         #"raw_data": raw_level_data
                     }

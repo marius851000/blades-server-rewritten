@@ -11,6 +11,7 @@ log = "0.4.29"
 mio = "1.2.0" # somehow, it doesn’t resolve well without excplicitly putting that (from tokio)
 tokio = { version = "1.51.0", features = ["full"] }
 blades_user_data = { path = "../blades_user_data" }
+game_data = { path = "../game_data" }
 clap = { version = "4.6.0", features = ["derive"] }
 serde = { version = "1.0.228", features = ["derive"] }
 serde_json = "1.0.149"

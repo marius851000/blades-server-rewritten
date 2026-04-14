@@ -889,6 +889,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "game_data"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "uuid",
+]
+
+[[package]]
 name = "generic-array"
 version = "0.14.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1724,6 +1732,7 @@ dependencies = [
  "diesel-async",
  "env_logger",
  "futures-util",
+ "game_data",
  "log",
  "mio",
  "rand 0.10.0",

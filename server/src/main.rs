@@ -1,4 +1,5 @@
 use std::{
+    fs::File,
     path::PathBuf,
     sync::Arc,
     time::{Duration, SystemTime, UNIX_EPOCH},
@@ -17,6 +18,7 @@ use bb8::Pool;
 use clap::{Parser, Subcommand};
 use diesel_async::{AsyncPgConnection, pooled_connection::AsyncDieselConnectionManager};
 use futures_util::FutureExt;
+use game_data::GameData;
 use log::debug;
 
 mod abyss;
@@ -73,9 +75,10 @@ enum Commands {
 type DbPool = Pool<AsyncDieselConnectionManager<AsyncPgConnection>>;
 
 pub struct ServerGlobal {
-    db_pool: DbPool,
-    session_store: SessionStore,
-    static_data_path: PathBuf,
+    pub db_pool: DbPool,
+    pub session_store: SessionStore,
+    pub static_data_path: PathBuf,
+    pub game_data: GameData,
 }
 
 #[main]
@@ -99,10 +102,17 @@ async fn main() -> Result<()> {
                 .await
                 .unwrap();
 
+            let game_data: GameData = {
+                let parsed_data_path = static_data.join("parsed.json");
+                let mut game_data_file = File::open(&parsed_data_path).unwrap();
+                serde_json::from_reader(&mut game_data_file).unwrap()
+            };
+
             let server_global = Arc::new(ServerGlobal {
                 db_pool,
                 session_store: SessionStore::new(Duration::from_hours(24)),
                 static_data_path: static_data.clone(),
+                game_data,
             });
 
             let static_data_clone = static_data.clone();
