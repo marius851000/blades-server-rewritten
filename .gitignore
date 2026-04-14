@@ -1,5 +1,6 @@
 /target
 test_*
 data/bundles.blades.bgs.services/
+data/parsed.json
 .env
 *.pyc
