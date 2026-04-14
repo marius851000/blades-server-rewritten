@@ -24,7 +24,7 @@ use crate::{
 #[serde(rename_all = "camelCase")]
 pub struct GetQuestsResponse {
     quests: Vec<QuestWithId>,
-    dungeon_generated_data: Vec<DungeonGeneratedDataWithId>,
+    dungeon_generated_data_list: Vec<DungeonGeneratedDataWithId>,
     jobs: Vec<()>, //TODO:
     character: CompleteCharacterWithIdWithoutData,
     job_pools: Value,                      //TODO: this one is critical
@@ -88,7 +88,7 @@ pub async fn get_quests(
 
             Ok(Json(GetQuestsResponse {
                 quests: result_quests,
-                dungeon_generated_data: result_generated_data,
+                dungeon_generated_data_list: result_generated_data,
                 character: CompleteCharacterWithIdWithoutData {
                     id: character_id,
                     character: character.character.0,
