@@ -160,6 +160,7 @@ async fn main() -> Result<()> {
                     .service(analytics::blades_bgs_event_analytics)
                     .service(analytics::blades_bgs_stat_analytics)
                     .service(analytics::swrve_batch_submit)
+                    .service(analytics::appcenter_log)
                     .service(announcements::check_status)
                     .service(session::sync)
                     .service(authentification::anon_log_in)
