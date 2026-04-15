@@ -1,6 +1,7 @@
 CREATE TABLE quests (
-    id UUID PRIMARY KEY,
-    character_id UUID references characters(id) NOT NULL,
-    info JSONB NOT NULL,
-    generated_data JSONB NOT NULL
-)
+    id          UUID              NOT NULL,
+    character_id UUID            NOT NULL REFERENCES characters(id),
+    info        JSONB             NOT NULL,
+    generated_data JSONB          NOT NULL,
+    PRIMARY KEY (id, character_id)
+);

@@ -12,7 +12,7 @@ diesel::table! {
 }
 
 diesel::table! {
-    quests (id) {
+    quests (id, character_id) {
         id -> Uuid,
         character_id -> Uuid,
         info -> Jsonb,
