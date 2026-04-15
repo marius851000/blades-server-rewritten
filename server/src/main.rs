@@ -173,6 +173,7 @@ async fn main() -> Result<()> {
                     .service(quest::get_quests)
                     .service(global_shop::get_override)
                     .service(global_shop::get_global_shop_for_character)
+                    .service(global_shop::get_iap)
                     .service(global_gift::get_global_gifts)
                     .service(character_data::update_data)
                     .service(

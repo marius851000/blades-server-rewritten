@@ -29,3 +29,16 @@ async fn get_global_shop_for_character() -> Json<GetGlobalShopForCharacterRespon
         global_shop: HashMap::new(),
     })
 }
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct GetIAPResponse {
+    fullfillment_overrides: HashMap<u32, ()>,
+}
+
+#[get("/blades.bgs.services/api/game/v1/public/catalogoverrides/iap")]
+async fn get_iap() -> Json<GetIAPResponse> {
+    Json(GetIAPResponse {
+        fullfillment_overrides: HashMap::default(),
+    })
+}
