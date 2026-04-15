@@ -20,13 +20,13 @@ pub struct GameDataInteractable {
     pub loot_table: HashMap<Uuid, GameDataLootTable>,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Clone)]
 pub struct GameDataItemReward {
     pub count: u64,
     pub template_uuid: Uuid,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Clone)]
 pub struct GameDataReward {
     pub experience: f64,
     pub town_points: u64,
@@ -34,18 +34,18 @@ pub struct GameDataReward {
     pub items_to_reward: Vec<GameDataItemReward>,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Clone)]
 pub struct GameDataObjective {
     pub description: String,
     pub quota: f64,
     pub rewards: Vec<GameDataReward>,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Clone)]
 pub struct GameDataQuestDungeonInfo {
     pub objectives: HashMap<Uuid, GameDataObjective>,
     pub version: u64,
-    pub dungeon_uuid: String, //TODO: sometimes not a UUID but "0"!?
+    pub dungeon_uuid: Uuid,
 }
 
 #[derive(Deserialize)]

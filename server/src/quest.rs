@@ -4,10 +4,11 @@ use actix_web::{
     post,
     web::{self, Json},
 };
-use blades_lib::user_data::{
-    CompleteCharacterWithIdWithoutData, DungeonGeneratedDataWithId, QuestWithId,
+use blades_lib::{
+    user_data::{CompleteCharacterWithIdWithoutData, DungeonGeneratedDataWithId, QuestWithId},
+    util::quest::generate_quest_data,
 };
-use diesel::{ExpressionMethods, QueryDsl, SelectableHelper, associations::HasTable};
+use diesel::{ExpressionMethods, QueryDsl, SelectableHelper, associations::HasTable, insert_into};
 use diesel_async::{AsyncConnection, RunQueryDsl, scoped_futures::ScopedFutureExt};
 use serde::Serialize;
 use serde_json::{Value, json};
@@ -15,9 +16,10 @@ use uuid::Uuid;
 
 use crate::{
     BladeApiError, ServerGlobal,
+    json_db::JsonDbWrapper,
     models::{CharacterDbEntryCharacterAlone, QuestDbEntry},
     session::SessionLookedUpMaybe,
-    util,
+    util::{self, check_permission_for_character_and_get_it},
 };
 
 #[derive(Serialize)]
@@ -156,4 +158,62 @@ pub async fn get_quests(
         .scope_boxed()
     })
     .await
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct AcceptQuestResponse {
+    quest: QuestWithId,
+    dungeon_generated_data: Option<DungeonGeneratedDataWithId>,
+}
+
+#[post(
+    "/blades.bgs.services/api/game/v1/public/characters/{character_id}/quests/{quest_id}/accept"
+)]
+async fn accept_quest(
+    session: SessionLookedUpMaybe,
+    request: Json<Option<()>>,
+    app_state: web::Data<Arc<ServerGlobal>>,
+    path: web::Path<(Uuid, Uuid)>,
+) -> Result<Json<AcceptQuestResponse>, BladeApiError> {
+    assert!(request.is_none());
+    let session = session.get_session_or_error()?;
+    let (character_id, quest_id) = path.into_inner();
+    let mut conn = app_state.db_pool.get().await.unwrap();
+
+    // check permission
+    let _ = check_permission_for_character_and_get_it(&mut conn, &session.session, character_id)
+        .await?;
+
+    // actually add quest
+
+    let (quest, dungeon_generated_data) = generate_quest_data(&app_state.game_data, quest_id)?;
+    //TODO: specifically handle the case the quest already exist (primary key is character id + quest id)
+
+    let to_insert = QuestDbEntry {
+        id: quest_id,
+        character_id,
+        info: JsonDbWrapper(quest.clone()),
+        generated_data: JsonDbWrapper(dungeon_generated_data.clone()),
+    };
+
+    {
+        use crate::schema::quests::dsl::*;
+
+        insert_into(quests::table())
+            .values(&to_insert)
+            .execute(&mut conn)
+            .await?;
+    }
+
+    Ok(Json(AcceptQuestResponse {
+        quest: QuestWithId {
+            id: quest_id,
+            quest,
+        },
+        dungeon_generated_data: dungeon_generated_data.map(|v| DungeonGeneratedDataWithId {
+            id: quest_id,
+            inner: v,
+        }),
+    }))
 }

@@ -49,6 +49,8 @@ def resolve_refs(data: Mapping[str, Any]) -> Dict[str, Any]:
 
     def _collect_targets(obj: Any) -> None:
         if isinstance(obj, Mapping):
+            if "_id" in obj and obj["_id"] == "0":
+                obj["_id"] = "00000000-0000-0000-0000-000000000000"
             if "$id" in obj and "_id" in obj:
                 ref_map[obj["$id"]] = obj
             for v in obj.values():

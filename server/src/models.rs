@@ -97,6 +97,12 @@ pub struct CharacterDbAlone {
     pub user_id: Uuid,
 }
 
+impl CharacterHolder for CharacterDbAlone {
+    fn get_user_id(&self) -> &Uuid {
+        &self.user_id
+    }
+}
+
 #[derive(Queryable, Selectable, Insertable)]
 #[diesel(table_name = crate::schema::quests)]
 #[diesel(check_for_backend(diesel::pg::Pg))]

@@ -5,7 +5,7 @@ use uuid::Uuid;
 
 use crate::user_data::Items;
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Default, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct LootTableResult {
     pub stackable_items: HashMap<Uuid, u64>,
@@ -13,7 +13,7 @@ pub struct LootTableResult {
     pub item: Items,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct DungeonEnemyResult {
     pub enemy_level: i64,
@@ -24,19 +24,19 @@ pub struct DungeonEnemyResult {
     pub loot_table_loot: HashMap<Uuid, LootTableResult>,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct DungeonItemResult {
     pub loot_table_loot: HashMap<Uuid, LootTableResult>,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct ChestGeneratedData {
     pub tier: u64,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct DungeonGeneratedData {
     pub enemy_generated_data: HashMap<Uuid, Vec<DungeonEnemyResult>>,

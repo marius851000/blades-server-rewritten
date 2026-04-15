@@ -172,6 +172,7 @@ async fn main() -> Result<()> {
                     .service(challenge::get_challenges)
                     .service(gameevent::get_game_events)
                     .service(quest::get_quests)
+                    .service(quest::accept_quest)
                     .service(global_shop::get_override)
                     .service(global_shop::get_global_shop_for_character)
                     .service(global_shop::get_iap)
