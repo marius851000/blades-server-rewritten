@@ -20,6 +20,8 @@ pub struct CompleteCharacterData {
     #[serde(rename = "new-flags")]
     #[serde(default)]
     pub new_flags: Value,
+    #[serde(default)]
+    pub dialog: Value,
 }
 
 impl Default for CompleteCharacterData {
@@ -27,6 +29,7 @@ impl Default for CompleteCharacterData {
         CompleteCharacterData {
             customization: json!({}),
             new_flags: json!({}),
+            dialog: json!({}),
         }
     }
 }
