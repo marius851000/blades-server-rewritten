@@ -66,7 +66,7 @@ pub async fn get_quests(
                 use crate::schema::quests::dsl::*;
                 // take care! that line above import a character_id thing
                 quests::table()
-                    .filter(id.eq(&character_id_var))
+                    .filter(character_id.eq(&character_id_var))
                     .select(QuestDbEntry::as_select())
                     .load(&mut conn)
                     .await?
