@@ -37,7 +37,7 @@ pub struct Quest {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct QuestWithId {
-    pub id: Uuid,
+    pub quest_id: Uuid,
     #[serde(flatten)]
     pub quest: Quest,
 }

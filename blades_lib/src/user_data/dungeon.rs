@@ -48,7 +48,7 @@ pub struct DungeonGeneratedData {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct DungeonGeneratedDataWithId {
-    pub id: Uuid,
+    pub quest_id: Uuid,
     #[serde(flatten)]
     pub inner: DungeonGeneratedData,
 }

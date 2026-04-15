@@ -77,12 +77,12 @@ pub async fn get_quests(
 
             for quest in quests {
                 result_quests.push(QuestWithId {
-                    id: quest.id,
+                    quest_id: quest.id,
                     quest: quest.info.0,
                 });
                 if let Some(generated_data) = quest.generated_data.0 {
                     result_generated_data.push(DungeonGeneratedDataWithId {
-                        id: quest.id,
+                        quest_id: quest.id,
                         inner: generated_data,
                     });
                 };
@@ -208,11 +208,11 @@ async fn accept_quest(
 
     Ok(Json(AcceptQuestResponse {
         quest: QuestWithId {
-            id: quest_id,
+            quest_id: quest_id,
             quest,
         },
         dungeon_generated_data: dungeon_generated_data.map(|v| DungeonGeneratedDataWithId {
-            id: quest_id,
+            quest_id: quest_id,
             inner: v,
         }),
     }))
