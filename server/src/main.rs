@@ -22,6 +22,7 @@ use futures_util::FutureExt;
 use log::debug;
 
 mod abyss;
+mod analytics;
 mod analytics_events;
 mod announcements;
 mod authentification;
@@ -156,6 +157,9 @@ async fn main() -> Result<()> {
                             Err(err) => Err(err),
                         })
                     })
+                    .service(analytics::blades_bgs_event_analytics)
+                    .service(analytics::blades_bgs_stat_analytics)
+                    .service(analytics::swrve_batch_submit)
                     .service(announcements::check_status)
                     .service(session::sync)
                     .service(authentification::anon_log_in)
