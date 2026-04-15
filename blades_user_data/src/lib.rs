@@ -69,7 +69,7 @@ pub struct CompleteCharacter {
     pub pvp_season_id: Uuid,
     pub job_difficulty_cycle_index: i64,
     pub validation_flags: u32,
-    pub trasury_level: u32,
+    pub treasury_level: u32,
     //avatar_icon_id
     pub name_validated: bool,
 }
@@ -78,8 +78,8 @@ impl Default for CompleteCharacter {
     fn default() -> Self {
         CompleteCharacter {
             name: String::default(),
-            tag_id: String::default(),
-            version: 0,
+            tag_id: "1234".to_string(),
+            version: 1,
             level: 1,
             experience: 1,
             maximum_abyss_level_reached: 0,
@@ -104,7 +104,7 @@ impl Default for CompleteCharacter {
             pvp_season_id: Uuid::default(),
             job_difficulty_cycle_index: 0,
             validation_flags: 1,
-            trasury_level: 0,
+            treasury_level: 0,
             name_validated: true,
         }
     }
