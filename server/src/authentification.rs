@@ -1,7 +1,7 @@
 use std::{collections::HashMap, sync::Arc};
 
 use actix_web::{http::StatusCode, post, web};
-use blades_user_data::UserAccount;
+use blades_lib::user_data::UserAccount;
 use diesel::{ExpressionMethods, QueryDsl, SelectableHelper, associations::HasTable, insert_into};
 use diesel_async::RunQueryDsl;
 use serde::{Deserialize, Serialize};

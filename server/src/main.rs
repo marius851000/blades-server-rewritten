@@ -15,10 +15,10 @@ use actix_web::{
 };
 use anyhow::{Context, Result};
 use bb8::Pool;
+use blades_lib::game_data::GameData;
 use clap::{Parser, Subcommand};
 use diesel_async::{AsyncPgConnection, pooled_connection::AsyncDieselConnectionManager};
 use futures_util::FutureExt;
-use game_data::GameData;
 use log::debug;
 
 mod abyss;

@@ -2,7 +2,7 @@ use actix_web::{
     post,
     web::{self, Json},
 };
-use blades_user_data::CompleteCharacterWithIdWithoutData;
+use blades_lib::user_data::CompleteCharacterWithIdWithoutData;
 use diesel::{ExpressionMethods, QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
 use serde::Serialize;

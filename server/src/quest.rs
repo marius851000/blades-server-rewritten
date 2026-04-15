@@ -4,7 +4,7 @@ use actix_web::{
     post,
     web::{self, Json},
 };
-use blades_user_data::{
+use blades_lib::user_data::{
     CompleteCharacterWithIdWithoutData, DungeonGeneratedDataWithId, QuestWithId,
 };
 use diesel::{ExpressionMethods, QueryDsl, SelectableHelper, associations::HasTable};

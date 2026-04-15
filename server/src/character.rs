@@ -10,7 +10,7 @@ use actix_web::{
     get, post,
     web::{self, Json},
 };
-use blades_user_data::{
+use blades_lib::user_data::{
     Backpack, CompleteCharacter, CompleteCharacterData, CompleteCharacterWithIdAndData,
     CompleteInventory, CompleteWallet, EquippedItems, Item, ItemPropertiesAll, Loadout,
     SingleEquippedItem, Treasury,

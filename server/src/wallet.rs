@@ -7,7 +7,7 @@ use actix_web::{
     get,
     web::{self, Json},
 };
-use blades_user_data::CompleteWallet;
+use blades_lib::user_data::CompleteWallet;
 use diesel::{ExpressionMethods, QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
 use serde::Serialize;

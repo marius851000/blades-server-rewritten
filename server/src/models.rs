@@ -1,4 +1,4 @@
-use blades_user_data::{
+use blades_lib::user_data::{
     CompleteCharacter, CompleteCharacterData, CompleteInventory, CompleteWallet,
     DungeonGeneratedData, Quest, UserAccount,
 };

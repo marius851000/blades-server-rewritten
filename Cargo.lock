@@ -330,7 +330,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "843867be96c8daad0d758b57df9392b6d8d271134fce549de6ce169ff98a92af"
 
 [[package]]
-name = "blades_user_data"
+name = "blades_lib"
 version = "0.1.0"
 dependencies = [
  "serde",
@@ -886,14 +886,6 @@ dependencies = [
  "futures-task",
  "pin-project-lite",
  "slab",
-]
-
-[[package]]
-name = "game_data"
-version = "0.1.0"
-dependencies = [
- "serde",
- "uuid",
 ]
 
 [[package]]
@@ -1726,13 +1718,12 @@ dependencies = [
  "actix-web",
  "anyhow",
  "bb8",
- "blades_user_data",
+ "blades_lib",
  "clap",
  "diesel",
  "diesel-async",
  "env_logger",
  "futures-util",
- "game_data",
  "log",
  "mio",
  "rand 0.10.0",

@@ -1,6 +1,6 @@
 [workspace]
 resolver = "3"
 members = [
-    "blades_user_data", "game_data",
+    "blades_lib",
     "server",
 ]
