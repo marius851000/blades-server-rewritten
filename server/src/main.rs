@@ -29,6 +29,7 @@ mod challenge;
 mod character;
 mod character_data;
 mod craft;
+mod daily_reward;
 mod dungeon;
 mod error;
 mod gameevent;
@@ -176,6 +177,7 @@ async fn main() -> Result<()> {
                     .service(global_shop::get_iap)
                     .service(global_gift::get_global_gifts)
                     .service(character_data::update_data)
+                    .service(daily_reward::get_daily_reward)
                     .service(
                         Files::new(
                             "/bundles.blades.bgs.services/",
