@@ -45,7 +45,7 @@ pub async fn get_quests(
     assert!(request.is_none());
     let session = session.get_session_or_error()?;
 
-    let character_id = path.into_inner();
+    let character_id_var = path.into_inner();
     let mut conn = app_state.db_pool.get().await.unwrap();
     conn.transaction(|mut conn| {
         async move {
@@ -53,7 +53,7 @@ pub async fn get_quests(
                 use crate::schema::characters::dsl::*;
 
                 characters::table()
-                    .filter(id.eq(&character_id))
+                    .filter(id.eq(&character_id_var))
                     .select(CharacterDbEntryCharacterAlone::as_select())
                     .load(&mut conn)
                     .await?
@@ -64,9 +64,9 @@ pub async fn get_quests(
             // we could have done an inner join to check the get the user id, but the user has already been checked previously.
             let quests = {
                 use crate::schema::quests::dsl::*;
-
+                // take care! that line above import a character_id thing
                 quests::table()
-                    .filter(id.eq(&character_id))
+                    .filter(id.eq(&character_id_var))
                     .select(QuestDbEntry::as_select())
                     .load(&mut conn)
                     .await?
@@ -92,7 +92,7 @@ pub async fn get_quests(
                 quests: result_quests,
                 dungeon_generated_data_list: result_generated_data,
                 character: CompleteCharacterWithIdWithoutData {
-                    id: character_id,
+                    id: character_id_var,
                     character: character.character.0,
                 },
                 jobs: Vec::new(),
