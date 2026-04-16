@@ -36,6 +36,7 @@ pub struct Quest {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct QuestWithId {
     pub quest_id: Uuid,
     #[serde(flatten)]

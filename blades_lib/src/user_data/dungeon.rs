@@ -47,6 +47,7 @@ pub struct DungeonGeneratedData {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct DungeonGeneratedDataWithId {
     pub quest_id: Uuid,
     #[serde(flatten)]
