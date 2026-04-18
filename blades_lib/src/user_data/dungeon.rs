@@ -45,7 +45,8 @@ pub struct ChestGeneratedData {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct DungeonGeneratedData {
-    pub enemy_generated_data: HashMap<Uuid, Vec<DungeonEnemyResult>>,
+    //TODO: figure what the two level of depth are used for
+    pub enemy_generated_data: HashMap<Uuid, Vec<Vec<DungeonEnemyResult>>>,
     pub item_generated_data: HashMap<Uuid, Vec<DungeonItemResult>>,
     pub chest_generated_data: HashMap<Uuid, Vec<ChestGeneratedData>>,
     pub algorithm_version: u64,

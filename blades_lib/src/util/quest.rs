@@ -64,13 +64,15 @@ pub fn generate_quest_data(
             .iter()
             .map(|(spawn_group_id, spawn_group)| {
                 let mut enemies_info = Vec::new();
+                assert!(spawn_group.quantity == 1);
+                //TODO: which one of the two level is appropriate for multiple enemy?
                 for _ in 0..spawn_group.quantity {
-                    enemies_info.push(DungeonEnemyResult {
+                    enemies_info.push(vec![DungeonEnemyResult {
                         enemy_level: 1,
                         given_xp: 1000,
                         spawn_group_loot: HashMap::default(),
                         loot_table_loot: HashMap::default(),
-                    })
+                    }])
                 }
                 (*spawn_group_id, enemies_info)
             })
