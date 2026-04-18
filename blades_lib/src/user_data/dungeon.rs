@@ -9,10 +9,13 @@ use crate::user_data::{B64EncodedData, Items};
 #[serde(rename_all = "camelCase")]
 pub struct LootTableResult {
     #[serde(skip_serializing_if = "HashMap::is_empty")]
+    #[serde(default)]
     pub stackable_items: HashMap<Uuid, u64>,
     #[serde(skip_serializing_if = "HashMap::is_empty")]
+    #[serde(default)]
     pub currencies: HashMap<Uuid, u64>,
     #[serde(skip_serializing_if = "Items::is_empty")]
+    #[serde(default)]
     pub item: Items,
 }
 
