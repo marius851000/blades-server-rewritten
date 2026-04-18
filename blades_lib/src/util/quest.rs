@@ -37,7 +37,7 @@ pub fn generate_quest_data(
         seed: 1234,
         r#type: QuestType::Normal,
         version: dungeon_info.version,
-        objectives_statuses: dungeon_info
+        objective_statuses: dungeon_info
             .objectives
             .iter()
             .map(|(id, _o)| {

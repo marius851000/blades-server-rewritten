@@ -28,7 +28,7 @@ pub struct ObjectiveStatus {
 pub struct Quest {
     pub version: u64,
     pub r#type: QuestType,
-    pub objectives_statuses: HashMap<Uuid, ObjectiveStatus>,
+    pub objective_statuses: HashMap<Uuid, ObjectiveStatus>,
     pub difficulty_level: i64,
     pub seed: u64,
     pub gld_quest_id: Uuid,
