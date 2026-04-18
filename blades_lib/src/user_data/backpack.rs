@@ -60,6 +60,11 @@ pub struct Items(
     )]
     pub HashMap<Uuid, Item>,
 );
+impl Items {
+    pub fn is_empty(&self) -> bool {
+        self.0.is_empty()
+    }
+}
 
 #[derive(Serialize, Deserialize, Debug, Clone, Default)]
 #[serde(rename_all = "camelCase")]
