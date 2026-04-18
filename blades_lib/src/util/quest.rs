@@ -7,7 +7,7 @@ use crate::{
     game_data::GameData,
     user_data::{
         ChestGeneratedData, DungeonEnemyResult, DungeonGeneratedData, DungeonItemResult,
-        ObjectiveStatus, Quest, QuestStatus, QuestType,
+        LootTableResult, ObjectiveStatus, Quest, QuestStatus, QuestType,
     },
 };
 
@@ -87,13 +87,35 @@ pub fn generate_quest_data(
             .spawn_info
             .item
             .iter()
-            .map(|(item_spawn_id, _spawn_info)| {
-                (
-                    *item_spawn_id,
+            .map(|(item_spawn_id, spawn_info)| {
+                (*item_spawn_id, {
+                    let picked_apparition_settings = match spawn_info.apparition_settings.first() {
+                        Some(v) => v,
+                        None => panic!(
+                            "Missing key apparition setting for an item in dungeon {}",
+                            dungeon.handle
+                        ),
+                    };
+
+                    let interactable = match game_data
+                        .interactables
+                        .get(&picked_apparition_settings.interactable_uuid)
+                    {
+                        Some(v) => v,
+                        None => panic!(
+                            "Interactable {} in dungeon {} not found",
+                            picked_apparition_settings.interactable_uuid, dungeon.handle
+                        ),
+                    };
+
                     vec![DungeonItemResult {
-                        loot_table_loot: HashMap::default(),
-                    }],
-                )
+                        loot_table_loot: interactable
+                            .loot_table
+                            .iter()
+                            .map(|(k, _v)| (*k, LootTableResult::default()))
+                            .collect(),
+                    }]
+                })
             })
             .collect(),
         algorithm_version: 1,
