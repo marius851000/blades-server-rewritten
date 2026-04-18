@@ -32,7 +32,7 @@ pub fn generate_quest_data(
     let dungeon_info = quest_data.dungeon_info.as_ref().unwrap();
     let quest = Quest {
         completed: false,
-        difficulty_level: -1,
+        difficulty_level: 1,
         gld_quest_id: quest_id,
         seed: 1234,
         r#type: QuestType::Normal,
@@ -119,7 +119,7 @@ pub fn generate_quest_data(
             })
             .collect(),
         algorithm_version: 1,
-        version: dungeon_info.version,
+        version: 0, //TODO: where does that come from? presumably not the same version that the quest itself.
     };
 
     Ok((quest, Some(generated_dungeon_data)))
