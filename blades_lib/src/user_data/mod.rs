@@ -140,3 +140,8 @@ impl UserAccount {
         }
     }
 }
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct B64EncodedData {
+    pub b64: String,
+}

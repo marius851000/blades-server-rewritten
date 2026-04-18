@@ -195,6 +195,7 @@ async fn accept_quest(
         character_id,
         info: JsonDbWrapper(quest.clone()),
         generated_data: JsonDbWrapper(dungeon_generated_data.clone()),
+        dungeon_state: None,
     };
 
     {

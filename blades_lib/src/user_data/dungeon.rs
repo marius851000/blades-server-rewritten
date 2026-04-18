@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use crate::user_data::Items;
+use crate::user_data::{B64EncodedData, Items};
 
 #[derive(Serialize, Deserialize, Debug, Default, Clone)]
 #[serde(rename_all = "camelCase")]
@@ -52,4 +52,22 @@ pub struct DungeonGeneratedDataWithId {
     pub quest_id: Uuid,
     #[serde(flatten)]
     pub inner: DungeonGeneratedData,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct DungeonStatus {
+    pub dungeon_settings_ids: Vec<Uuid>,
+    pub revive_count: u64,
+    pub level: u64,
+    pub seed: i64,
+    pub current_state: B64EncodedData,
+    pub algorithm_version: i64,
+    pub version: i64,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct DungeonState {
+    pub dungeon_status: DungeonStatus,
 }

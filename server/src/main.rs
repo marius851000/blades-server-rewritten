@@ -171,6 +171,7 @@ async fn main() -> Result<()> {
                     .service(inventory::get_inventory)
                     .service(analytics_events::list_events)
                     .service(dungeon::get_dungeons)
+                    .service(dungeon::enter_quest_dungeon)
                     .service(abyss::get_abyss)
                     .service(town::get_town)
                     .service(craft::get_crafts)
