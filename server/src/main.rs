@@ -162,6 +162,7 @@ async fn main() -> Result<()> {
                     .service(analytics::swrve_batch_submit)
                     .service(analytics::swrve_submit_device_info)
                     .service(analytics::appcenter_log)
+                    .service(analytics::swrve_identity_identify)
                     .service(announcements::check_status)
                     .service(session::sync)
                     .service(authentification::anon_log_in)

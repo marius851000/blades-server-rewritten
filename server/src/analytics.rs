@@ -29,6 +29,20 @@ pub async fn swrve_submit_device_info(
     Json(HashMap::new())
 }
 
+#[derive(Serializls e, Debug)]
+struct SwrveIdentifyResponse {
+    status: &'static str,
+    swrve_id: Uuid,
+}
+
+#[post("/{server_id}.identity.swrve.com/identify")]
+pub async fn swrve_identity_identify() -> Json<SwrveIdentifyResponse> {
+    Json(SwrveIdentifyResponse {
+        status: "new_external_id",
+        swrve_id: Uuid::new_v4(),
+    })
+}
+
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 struct AppcenterLogResponse {
