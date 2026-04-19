@@ -29,7 +29,7 @@ pub async fn swrve_submit_device_info(
     Json(HashMap::new())
 }
 
-#[derive(Serializls e, Debug)]
+#[derive(Serialize, Debug)]
 struct SwrveIdentifyResponse {
     status: &'static str,
     swrve_id: Uuid,
