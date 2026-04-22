@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::{sync::Arc, time::{SystemTime, UNIX_EPOCH}};
 
 use actix_web::{
     post,
@@ -17,11 +17,17 @@ async fn get_daily_reward(
     _app_state: web::Data<Arc<ServerGlobal>>,
     _path: web::Path<Uuid>,
 ) -> Result<Json<Value>, BladeApiError> {
-    //TODO: de-placeholder-ify this function
+    // providing an "until" from the past cause the client to try getting an updated value an not process any other request until a new up to date one is fetched
+
+    let expire_time = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map(|x| x.as_millis())
+        .unwrap_or(0) + 3600 * 1000;
+
     Ok(Json(json!( {
         "dailyRewardStatus": {
             "rewardUid": "eefb9db4-0632-49b9-ae35-1da398ca0003",
-            "until": 1774760493056_i64,
+            "until": expire_time,
             "dailyReward": {
                 "stackableItems": {
                     "42d91529-c88b-4c5b-815b-b55508b4e7ef": 2
