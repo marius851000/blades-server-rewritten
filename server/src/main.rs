@@ -23,7 +23,7 @@ use log::debug;
 mod abyss;
 mod analytics;
 mod analytics_events;
-mod announcements;
+mod status;
 mod authentification;
 mod challenge;
 mod character;
@@ -181,7 +181,7 @@ async fn main() -> Result<()> {
                     .service(analytics::swrve_submit_device_info)
                     .service(analytics::appcenter_log)
                     .service(analytics::swrve_identity_identify)
-                    .service(announcements::check_status)
+                    .service(status::check_status)
                     .service(session::sync)
                     .service(authentification::anon_log_in)
                     .service(character::list_characters)
