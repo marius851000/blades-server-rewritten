@@ -4,3 +4,8 @@ data/bundles.blades.bgs.services/
 data/parsed.json
 .env
 *.pyc
+build-app/tmp
+build-app/keys.keystore
+build-app/source-package.apk
+build-app/patched.apk
+build-app/patched.apk.idsig
