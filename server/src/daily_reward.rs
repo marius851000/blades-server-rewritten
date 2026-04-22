@@ -1,4 +1,7 @@
-use std::{sync::Arc, time::{SystemTime, UNIX_EPOCH}};
+use std::{
+    sync::Arc,
+    time::{SystemTime, UNIX_EPOCH},
+};
 
 use actix_web::{
     post,
@@ -22,7 +25,8 @@ async fn get_daily_reward(
     let expire_time = SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .map(|x| x.as_millis())
-        .unwrap_or(0) + 3600 * 1000;
+        .unwrap_or(0)
+        + 3600 * 1000;
 
     Ok(Json(json!( {
         "dailyRewardStatus": {

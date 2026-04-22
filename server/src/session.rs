@@ -4,7 +4,10 @@ use serde::Serialize;
 use std::{
     collections::BTreeMap,
     future::{self, ready},
-    sync::{Arc, Mutex, atomic::{AtomicU64, Ordering}},
+    sync::{
+        Arc, Mutex,
+        atomic::{AtomicU64, Ordering},
+    },
     time::{Duration, SystemTime, UNIX_EPOCH},
 };
 use tokio::time::Instant;
@@ -220,6 +223,10 @@ struct SyncResponse {
 async fn sync(session: SessionLookedUpMaybe) -> Result<web::Json<SyncResponse>, BladeApiError> {
     let session = session.get_session_or_error()?;
     Ok(web::Json(SyncResponse {
-        request_index: session.session.request_count.load(Ordering::Relaxed).saturating_sub(1) // the counter is incremented before processing the variable. This may cause issue if multiple request from the client are made simulteneously, thought.
+        request_index: session
+            .session
+            .request_count
+            .load(Ordering::Relaxed)
+            .saturating_sub(1), // the counter is incremented before processing the variable. This may cause issue if multiple request from the client are made simulteneously, thought.
     }))
 }

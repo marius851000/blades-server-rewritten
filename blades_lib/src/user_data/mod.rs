@@ -42,7 +42,7 @@ pub struct CharacterChallengeSeason {
     pub rank_rewarded: i64,
     pub points: i64,
     pub season_year: u64,
-    pub premium: bool
+    pub premium: bool,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -108,7 +108,7 @@ impl Default for CompleteCharacter {
                 rank_rewarded: 0,
                 points: 0,
                 season_year: 2026,
-                premium: false
+                premium: false,
             },
             last_guild_exchange_request_time: 0,
             last_guild_exchange_donation_time: 0,
