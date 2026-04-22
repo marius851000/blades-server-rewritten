@@ -1,7 +1,7 @@
 use std::{
     fs::File,
     path::PathBuf,
-    sync::Arc,
+    sync::{Arc, atomic::Ordering},
     time::{Duration, SystemTime, UNIX_EPOCH},
 };
 
@@ -47,8 +47,9 @@ mod util;
 mod wallet;
 
 pub use error::BladeApiError;
+use uuid::Uuid;
 
-use crate::session::SessionStore;
+use crate::session::{SessionLookedUpMaybe, SessionStore};
 
 #[derive(Parser)]
 #[command(name = "blade")]
@@ -122,40 +123,58 @@ async fn main() -> Result<()> {
             HttpServer::new(move || {
                 App::new()
                     .app_data(Data::new(server_global.clone()))
-                    .wrap_fn(|req, srv| {
+                    .wrap_fn(|mut req, srv| {
                         let start_timestamp = SystemTime::now();
                         let is_from_blades_api =
                             req.uri().path().starts_with("/blades.bgs.services/");
-                        srv.call(req).map(move |res| match res {
-                            Ok(mut res) => {
-                                if is_from_blades_api {
+                        let session_fut = req.extract::<SessionLookedUpMaybe>();
+                        let res_fut = srv.call(req);
+                        async move {
+                            let maybe_session = session_fut.await?;
+                            let request_index =
+                                maybe_session.get_session_or_error().ok().map(|session| {
+                                    session
+                                        .session
+                                        .request_count
+                                        .fetch_add(1, Ordering::Relaxed)
+                                });
+                            let mut res = res_fut.await?;
+                            if is_from_blades_api {
+                                res.headers_mut().insert(
+                                    HeaderName::from_static("server-request-timestamp"),
+                                    HeaderValue::from_str(&format!(
+                                        "{}",
+                                        start_timestamp
+                                            .duration_since(UNIX_EPOCH)
+                                            .map(|x| x.as_millis())
+                                            .unwrap_or(0)
+                                    ))
+                                    .unwrap(),
+                                );
+                                res.headers_mut().insert(
+                                    HeaderName::from_static("server-timestamp"),
+                                    HeaderValue::from_str(&format!(
+                                        "{}",
+                                        SystemTime::now()
+                                            .duration_since(UNIX_EPOCH)
+                                            .map(|x| x.as_millis())
+                                            .unwrap_or(0)
+                                    ))
+                                    .unwrap(),
+                                );
+                                res.headers_mut().insert(
+                                    HeaderName::from_static("server-operation-id"),
+                                    HeaderValue::from_str(&Uuid::new_v4().to_string()).unwrap(),
+                                );
+                                if let Some(request_index) = request_index {
                                     res.headers_mut().insert(
-                                        HeaderName::from_static("server-request-timestamp"),
-                                        HeaderValue::from_str(&format!(
-                                            "{}",
-                                            start_timestamp
-                                                .duration_since(UNIX_EPOCH)
-                                                .map(|x| x.as_millis())
-                                                .unwrap_or(0)
-                                        ))
-                                        .unwrap(),
-                                    );
-                                    res.headers_mut().insert(
-                                        HeaderName::from_static("server-timestamp"),
-                                        HeaderValue::from_str(&format!(
-                                            "{}",
-                                            SystemTime::now()
-                                                .duration_since(UNIX_EPOCH)
-                                                .map(|x| x.as_millis())
-                                                .unwrap_or(0)
-                                        ))
-                                        .unwrap(),
+                                        HeaderName::from_static("request-index"),
+                                        HeaderValue::from_str(&request_index.to_string()).unwrap(),
                                     );
                                 }
-                                Ok(res)
                             }
-                            Err(err) => Err(err),
-                        })
+                            Ok(res)
+                        }
                     })
                     .service(analytics::blades_bgs_event_analytics)
                     .service(analytics::blades_bgs_stat_analytics)

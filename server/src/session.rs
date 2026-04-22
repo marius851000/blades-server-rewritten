@@ -4,7 +4,7 @@ use serde::Serialize;
 use std::{
     collections::BTreeMap,
     future::{self, ready},
-    sync::{Arc, Mutex},
+    sync::{Arc, Mutex, atomic::{AtomicU64, Ordering}},
     time::{Duration, SystemTime, UNIX_EPOCH},
 };
 use tokio::time::Instant;
@@ -17,6 +17,8 @@ pub struct Session {
     pub secret_user_id: Uuid,
     pub extra_secret: Uuid, // a UUIDv4 just for added randomness
     pub expire_unix_timestamp: u64,
+    // incremented each (connected) request by the middleware
+    pub request_count: AtomicU64,
 }
 
 impl Session {
@@ -35,6 +37,7 @@ impl Session {
                 }
             },
             extra_secret: Uuid::new_v4(),
+            request_count: AtomicU64::new(1),
         }
     }
 
@@ -215,7 +218,8 @@ struct SyncResponse {
 
 #[get("/blades.bgs.services/api/game/v1/public/sync")]
 async fn sync(session: SessionLookedUpMaybe) -> Result<web::Json<SyncResponse>, BladeApiError> {
-    let _session = session.get_session_or_error()?;
-    //TODO: actually implement the endpoint. Count request or something.
-    Ok(web::Json(SyncResponse { request_index: 0 }))
+    let session = session.get_session_or_error()?;
+    Ok(web::Json(SyncResponse {
+        request_index: session.session.request_count.load(Ordering::Relaxed).saturating_sub(1) // the counter is incremented before processing the variable. This may cause issue if multiple request from the client are made simulteneously, thought.
+    }))
 }
