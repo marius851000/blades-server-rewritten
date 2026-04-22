@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use std::{collections::HashSet, str::FromStr};
 
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
@@ -36,6 +36,17 @@ impl Default for CompleteCharacterData {
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
+pub struct CharacterChallengeSeason {
+    pub current_session_id: Uuid,
+    pub rank: i64,
+    pub rank_rewarded: i64,
+    pub points: i64,
+    pub season_year: u64,
+    pub premium: bool
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
 // May also be sent to the user on initial sync (does not have the id field, see #[serde(flatten)])
 pub struct CompleteCharacter {
     pub name: String,
@@ -54,7 +65,7 @@ pub struct CompleteCharacter {
     pub stamina_attribute_points: u32,
     pub magicka_attribute_points: u32,
     // globalShopOffers
-    // challengeSeason
+    pub challenge_season: CharacterChallengeSeason,
     // loadoutProfiles
     pub last_guild_exchange_request_time: u64,
     pub last_guild_exchange_donation_time: u64,
@@ -91,6 +102,14 @@ impl Default for CompleteCharacter {
             inventory_level: 0,
             stamina_attribute_points: 0,
             magicka_attribute_points: 0,
+            challenge_season: CharacterChallengeSeason {
+                current_session_id: Uuid::from_str("3d336fe7-be60-46a1-b88b-540f3ad5efa2").unwrap(),
+                rank: 1,
+                rank_rewarded: 0,
+                points: 0,
+                season_year: 2026,
+                premium: false
+            },
             last_guild_exchange_request_time: 0,
             last_guild_exchange_donation_time: 0,
             guild_exchange_donation_count: 0,
