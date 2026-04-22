@@ -7,13 +7,13 @@ use uuid::Uuid;
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 struct GetGlobalShopOverrideResponse {
-    global_shop_override: HashMap<Uuid, ()>,
+    global_shop_overrides: HashMap<Uuid, ()>,
 }
 
 #[get("/blades.bgs.services/api/game/v1/public/catalogoverrides/globalshop")]
 async fn get_override() -> Json<GetGlobalShopOverrideResponse> {
     Json(GetGlobalShopOverrideResponse {
-        global_shop_override: HashMap::new(),
+        global_shop_overrides: HashMap::new(),
     })
 }
 
