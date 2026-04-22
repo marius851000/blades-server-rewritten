@@ -44,6 +44,7 @@ mod session;
 mod town;
 mod util;
 mod wallet;
+mod announcements;
 
 pub use error::BladeApiError;
 use uuid::Uuid;
@@ -205,6 +206,7 @@ async fn main() -> Result<()> {
                     .service(global_gift::get_global_gifts)
                     .service(character_data::update_data)
                     .service(daily_reward::get_daily_reward)
+                    .service(announcements::get_announcements)
                     .service(
                         Files::new(
                             "/bundles.blades.bgs.services/",
