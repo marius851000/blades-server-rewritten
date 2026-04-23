@@ -18,6 +18,7 @@ diesel::table! {
         info -> Jsonb,
         generated_data -> Jsonb,
         dungeon_state -> Nullable<Jsonb>,
+        initial_state -> Nullable<Jsonb>,
     }
 }
 

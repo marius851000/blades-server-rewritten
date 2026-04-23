@@ -1,5 +1,5 @@
 use blades_lib::user_data::{
-    CompleteCharacter, CompleteCharacterData, CompleteInventory, CompleteWallet,
+    B64EncodedData, CompleteCharacter, CompleteCharacterData, CompleteInventory, CompleteWallet,
     DungeonGeneratedData, DungeonState, Quest, UserAccount,
 };
 use diesel::prelude::*;
@@ -117,7 +117,8 @@ pub struct QuestDbEntry {
 #[derive(Queryable, Selectable)]
 #[diesel(table_name = crate::schema::quests)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
-pub struct QuestDbEntryDungeonState {
+pub struct QuestDbEntryDungeonStateAndInitialState {
     pub id: Uuid,
     pub dungeon_state: Option<JsonDbWrapper<DungeonState>>,
+    pub initial_state: Option<JsonDbWrapper<B64EncodedData>>,
 }
