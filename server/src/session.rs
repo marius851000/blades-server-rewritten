@@ -5,15 +5,18 @@ use std::{
     collections::BTreeMap,
     future::{self, ready},
     sync::{
-        Arc, Mutex,
+        Arc,
         atomic::{AtomicU64, Ordering},
     },
     time::{Duration, SystemTime, UNIX_EPOCH},
 };
-use tokio::time::Instant;
+use tokio::{
+    sync::{Mutex, mpsc::UnboundedSender},
+    time::Instant,
+};
 use uuid::Uuid;
 
-use crate::{BladeApiError, ServerGlobal};
+use crate::{BladeApiError, ServerGlobal, arena::MatchmakingMessage};
 
 pub struct Session {
     pub user_id: Uuid,
@@ -22,6 +25,7 @@ pub struct Session {
     pub expire_unix_timestamp: u64,
     // incremented each (connected) request by the middleware
     pub request_count: AtomicU64,
+    pub matchmaking_ws: Mutex<Option<UnboundedSender<MatchmakingMessage>>>,
 }
 
 impl Session {
@@ -41,6 +45,7 @@ impl Session {
             },
             extra_secret: Uuid::new_v4(),
             request_count: AtomicU64::new(1),
+            matchmaking_ws: Mutex::new(None),
         }
     }
 
@@ -147,7 +152,7 @@ impl FromRequest for SessionLookedUpMaybe {
 
 pub struct SessionStore {
     //TODO: eventually migrate to a parallel ordered map. A mutex per request seems pretty bad for performance.
-    map: Mutex<BTreeMap<Uuid, Arc<Session>>>,
+    map: std::sync::Mutex<BTreeMap<Uuid, Arc<Session>>>,
     /// TTL should be at least 1h30min, as that is the grace period used by session for its ttl returned to the client.
     pub ttl: Duration,
     time_base: Instant,
@@ -156,7 +161,7 @@ pub struct SessionStore {
 impl SessionStore {
     pub fn new(ttl: Duration) -> Self {
         Self {
-            map: Mutex::new(BTreeMap::default()),
+            map: std::sync::Mutex::new(BTreeMap::default()),
             ttl,
             time_base: Instant::now(),
         }
