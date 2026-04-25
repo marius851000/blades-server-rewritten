@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::{collections::HashMap, sync::Arc};
 
 use actix_web::{
     get, post,
@@ -142,6 +142,7 @@ pub async fn enter_quest_dungeon(
                     revive_count: 0,
                     algorithm_version: 1,
                     current_state: body.current_state,
+                    enemy_status: HashMap::default(),
                     seed: 54321,
                     level: 1,
                     version: 1, //TODO: figure out where this version come from.

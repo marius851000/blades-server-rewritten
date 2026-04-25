@@ -31,6 +31,7 @@ mod character_data;
 mod craft;
 mod daily_reward;
 mod dungeon;
+mod dungeon_update;
 mod error;
 mod gameevent;
 mod global_gift;
@@ -193,6 +194,7 @@ async fn main() -> Result<()> {
                     .service(analytics_events::list_events)
                     .service(dungeon::get_dungeons)
                     .service(dungeon::enter_quest_dungeon)
+                    .service(dungeon_update::dungeon_update)
                     .service(abyss::get_abyss)
                     .service(town::get_town)
                     .service(craft::get_crafts)

@@ -1,6 +1,6 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, fmt};
 
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use uuid::Uuid;
 
 use crate::user_data::{B64EncodedData, Items};
@@ -19,6 +19,24 @@ pub struct LootTableResult {
     pub item: Items,
 }
 
+impl LootTableResult {
+    pub fn merge(&mut self, other: LootTableResult) {
+        for (uuid, amount) in other.stackable_items {
+            self.stackable_items.insert(
+                uuid,
+                self.stackable_items.get(&uuid).map(|x| *x).unwrap_or(0) + amount,
+            );
+        }
+        for (uuid, amount) in other.currencies {
+            self.currencies.insert(
+                uuid,
+                self.currencies.get(&uuid).map(|x| *x).unwrap_or(0) + amount,
+            );
+        }
+        self.item.0.extend(other.item.0);
+    }
+}
+
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct DungeonEnemyResult {
@@ -28,6 +46,20 @@ pub struct DungeonEnemyResult {
     //TODO: need to find a filled spawn_group_loot to verify it really is that.
     pub spawn_group_loot: HashMap<Uuid, LootTableResult>,
     pub loot_table_loot: HashMap<Uuid, LootTableResult>,
+}
+
+impl DungeonEnemyResult {
+    pub fn merged_loot_table(&self) -> LootTableResult {
+        let mut result = LootTableResult::default();
+        for loot_table in self
+            .spawn_group_loot
+            .values()
+            .chain(self.loot_table_loot.values())
+        {
+            result.merge(loot_table.clone());
+        }
+        result
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -45,12 +77,21 @@ pub struct ChestGeneratedData {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct DungeonGeneratedData {
-    //TODO: figure what the two level of depth are used for
+    //TODO: figure what the two level of depth are used for (one is named "spawner"(id) and the second "enemy"(id))
     pub enemy_generated_data: HashMap<Uuid, Vec<Vec<DungeonEnemyResult>>>,
     pub item_generated_data: HashMap<Uuid, Vec<DungeonItemResult>>,
     pub chest_generated_data: HashMap<Uuid, Vec<ChestGeneratedData>>,
     pub algorithm_version: u64,
     pub version: u64,
+}
+
+impl DungeonGeneratedData {
+    pub fn get_enemy(&self, index: &EnemyIndex) -> Option<&DungeonEnemyResult> {
+        self.enemy_generated_data
+            .get(&index.spawner_uuid)
+            .and_then(|spawner_data| spawner_data.get(index.spawner_index))
+            .and_then(|enemy_data| enemy_data.get(index.enemy_index))
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -63,6 +104,16 @@ pub struct DungeonGeneratedDataWithId {
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
+pub struct EnemyStatus {
+    pub spawn_group_id: Uuid,
+    pub xp_reward: u64,
+    pub killed: bool,
+    pub time: u64,
+    pub loot: LootTableResult,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
 pub struct DungeonStatus {
     pub dungeon_settings_ids: Vec<Uuid>,
     pub revive_count: u64,
@@ -71,10 +122,85 @@ pub struct DungeonStatus {
     pub current_state: B64EncodedData,
     pub algorithm_version: i64,
     pub version: i64,
+    #[serde(default)]
+    pub enemy_status: HashMap<EnemyIndex, EnemyStatus>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct DungeonState {
     pub dungeon_status: DungeonStatus,
+}
+
+#[derive(Debug, Clone, Hash, PartialEq, Eq, PartialOrd, Ord)]
+pub struct EnemyIndex {
+    pub spawner_uuid: Uuid,
+    pub spawner_index: usize,
+    pub enemy_index: usize,
+}
+
+impl EnemyIndex {
+    pub fn new(spawner_uuid: Uuid, spawner_index: usize, enemy_index: usize) -> Self {
+        Self {
+            spawner_uuid,
+            spawner_index,
+            enemy_index,
+        }
+    }
+}
+
+impl fmt::Display for EnemyIndex {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{}-{}-{}",
+            self.spawner_uuid, self.spawner_index, self.enemy_index
+        )
+    }
+}
+
+// Serialize as a single string “uuid-index-index”
+impl Serialize for EnemyIndex {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        serializer.serialize_str(&self.to_string())
+    }
+}
+
+// Deserialize from that string format
+impl<'de> Deserialize<'de> for EnemyIndex {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let s = String::deserialize(deserializer)?;
+        let mut parts = s.split('-');
+        let spawner_uuid = Uuid::parse_str(
+            parts
+                .next()
+                .ok_or_else(|| serde::de::Error::custom("Missing UUID"))?,
+        )
+        .map_err(serde::de::Error::custom)?;
+        let spawner_index = parts
+            .next()
+            .ok_or_else(|| serde::de::Error::custom("Missing spawner index"))?
+            .parse::<usize>()
+            .map_err(serde::de::Error::custom)?;
+        let enemy_index = parts
+            .next()
+            .ok_or_else(|| serde::de::Error::custom("Missing enemy index"))?
+            .parse::<usize>()
+            .map_err(serde::de::Error::custom)?;
+        // reject any trailing parts
+        if parts.next().is_some() {
+            return Err(serde::de::Error::custom("Too many parts in EnemyIndex"));
+        }
+        Ok(EnemyIndex {
+            spawner_uuid,
+            spawner_index,
+            enemy_index,
+        })
+    }
 }

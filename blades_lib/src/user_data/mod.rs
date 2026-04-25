@@ -132,7 +132,7 @@ impl Default for CompleteCharacter {
     }
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Debug)]
 pub struct CompleteCharacterWithIdWithoutData {
     pub id: Uuid,
     #[serde(flatten)]

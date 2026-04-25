@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use uuid::Uuid;
@@ -73,6 +73,40 @@ pub struct Backpack {
     pub items: Items,
 }
 
+#[derive(Serialize, Debug, Clone, Default)]
+pub struct BackpackUpdate {
+    pub stackable_items: StackableItems,
+    pub items: Items,
+    pub removed_items: HashSet<Uuid>,
+    pub removed_stackable_items: HashSet<Uuid>,
+}
+
+impl Backpack {
+    pub fn generate_client_update(&self, tracker: &BackpackChangeTracker) -> BackpackUpdate {
+        let mut update = BackpackUpdate::default();
+
+        for changed_stackable_id in &tracker.stackable_items {
+            if let Some(item) = self.stackable_items.0.get(changed_stackable_id) {
+                update
+                    .stackable_items
+                    .0
+                    .insert(*changed_stackable_id, item.clone());
+            } else {
+                update.removed_stackable_items.insert(*changed_stackable_id);
+            }
+        }
+
+        for changed_item_id in &tracker.items {
+            if let Some(item) = self.items.0.get(changed_item_id) {
+                update.items.0.insert(*changed_item_id, item.clone());
+            } else {
+                update.removed_items.insert(*changed_item_id);
+            }
+        }
+        update
+    }
+}
+
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct SingleEquippedItem {
@@ -83,16 +117,40 @@ pub struct SingleEquippedItem {
     pub item: Item,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, Default)]
 pub struct EquippedItems(
     /// the UUID is the slot, and NOT the item id
     pub HashMap<Uuid, SingleEquippedItem>,
 );
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, Default)]
 #[serde(rename_all = "camelCase")]
 pub struct Loadout {
     pub equipped_items: EquippedItems,
+}
+
+#[derive(Serialize, Debug, Clone, Default)]
+pub struct LoadoutUpdate {
+    pub equipped_items: EquippedItems,
+    pub unequipped_item_slots: HashSet<Uuid>,
+}
+
+impl Loadout {
+    pub fn generate_client_update(&self, tracker: &LoadoutChangeTracker) -> LoadoutUpdate {
+        let mut update = LoadoutUpdate::default();
+
+        for updated_loadout in &tracker.modified_equipped_items {
+            if let Some(item) = self.equipped_items.0.get(&updated_loadout) {
+                update
+                    .equipped_items
+                    .0
+                    .insert(*updated_loadout, item.clone());
+            } else {
+                update.unequipped_item_slots.insert(*updated_loadout);
+            }
+        }
+        update
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -120,4 +178,53 @@ pub struct CompleteInventory {
     pub overflow_treasury: Treasury,
     pub backpack_version: u64,
     pub treasury_version: u64,
+}
+
+#[derive(Serialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct CompleteInventoryUpdate {
+    pub backpack: BackpackUpdate,
+    pub loadout: LoadoutUpdate,
+    pub treasury: Treasury,
+    pub overflow_treasury: Treasury,
+    pub backpack_version: u64,
+    pub treasury_version: u64,
+}
+
+impl CompleteInventory {
+    pub fn generate_client_update(
+        &self,
+        tracker: &InventoryChangeTracker,
+    ) -> CompleteInventoryUpdate {
+        CompleteInventoryUpdate {
+            backpack_version: self.backpack_version,
+            treasury_version: self.treasury_version,
+            backpack: self
+                .backpack
+                .generate_client_update(&tracker.modified_backpack),
+            loadout: self
+                .loadout
+                .generate_client_update(&tracker.modified_loadout),
+            treasury: Treasury::default(),
+            overflow_treasury: Treasury::default(),
+        }
+    }
+}
+
+#[derive(Default, Debug, Clone)]
+pub struct BackpackChangeTracker {
+    pub stackable_items: HashSet<Uuid>,
+    pub items: HashSet<Uuid>,
+}
+
+#[derive(Default, Debug, Clone)]
+pub struct LoadoutChangeTracker {
+    pub modified_equipped_items: HashSet<Uuid>,
+}
+
+#[derive(Default, Debug, Clone)]
+pub struct InventoryChangeTracker {
+    pub modified_loadout: LoadoutChangeTracker,
+    pub modified_backpack: BackpackChangeTracker,
+    //TODO: treasury change tracker
 }

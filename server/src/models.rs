@@ -29,6 +29,17 @@ pub struct CharacterDbEntry {
     pub inventory: JsonDbWrapper<CompleteInventory>,
 }
 
+#[derive(Queryable, Selectable, AsChangeset)]
+#[diesel(table_name = crate::schema::characters)]
+#[diesel(check_for_backend(diesel::pg::Pg))]
+pub struct CharacterDbEntryCharacterWalletInventory {
+    pub id: Uuid,
+    pub user_id: Uuid,
+    pub character: JsonDbWrapper<CompleteCharacter>,
+    pub wallet: JsonDbWrapper<CompleteWallet>,
+    pub inventory: JsonDbWrapper<CompleteInventory>,
+}
+
 #[derive(Queryable, Selectable)]
 #[diesel(table_name = crate::schema::characters)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
@@ -121,4 +132,13 @@ pub struct QuestDbEntryDungeonStateAndInitialState {
     pub id: Uuid,
     pub dungeon_state: Option<JsonDbWrapper<DungeonState>>,
     pub initial_state: Option<JsonDbWrapper<B64EncodedData>>,
+}
+
+#[derive(Queryable, Selectable, AsChangeset)]
+#[diesel(table_name = crate::schema::quests)]
+#[diesel(check_for_backend(diesel::pg::Pg))]
+pub struct QuestDbEntryDungeonStateAndGeneratedData {
+    pub id: Uuid,
+    pub dungeon_state: Option<JsonDbWrapper<DungeonState>>,
+    pub generated_data: JsonDbWrapper<Option<DungeonGeneratedData>>,
 }
