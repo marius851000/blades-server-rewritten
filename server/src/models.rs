@@ -40,7 +40,7 @@ pub struct CharacterDbEntryCharacterWalletInventory {
     pub inventory: JsonDbWrapper<CompleteInventory>,
 }
 
-#[derive(Queryable, Selectable)]
+#[derive(Queryable, Selectable, AsChangeset)]
 #[diesel(table_name = crate::schema::characters)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
 pub struct CharacterDbEntryCharacterAlone {

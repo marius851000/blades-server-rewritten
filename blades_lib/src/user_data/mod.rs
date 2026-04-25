@@ -84,8 +84,10 @@ pub struct CompleteCharacter {
     pub job_difficulty_cycle_index: i64,
     pub validation_flags: u32,
     pub treasury_level: u32,
-    //avatar_icon_id
     pub name_validated: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default)]
+    pub avatar_icon_id: Option<Uuid>,
 }
 
 impl Default for CompleteCharacter {
@@ -128,6 +130,7 @@ impl Default for CompleteCharacter {
             validation_flags: 1,
             treasury_level: 0,
             name_validated: true,
+            avatar_icon_id: None,
         }
     }
 }
