@@ -176,27 +176,19 @@ impl<'de> Deserialize<'de> for EnemyIndex {
         D: Deserializer<'de>,
     {
         let s = String::deserialize(deserializer)?;
-        let mut parts = s.split('-');
-        let spawner_uuid = Uuid::parse_str(
-            parts
-                .next()
-                .ok_or_else(|| serde::de::Error::custom("Missing UUID"))?,
-        )
-        .map_err(serde::de::Error::custom)?;
-        let spawner_index = parts
-            .next()
-            .ok_or_else(|| serde::de::Error::custom("Missing spawner index"))?
-            .parse::<usize>()
-            .map_err(serde::de::Error::custom)?;
-        let enemy_index = parts
-            .next()
-            .ok_or_else(|| serde::de::Error::custom("Missing enemy index"))?
-            .parse::<usize>()
-            .map_err(serde::de::Error::custom)?;
-        // reject any trailing parts
-        if parts.next().is_some() {
-            return Err(serde::de::Error::custom("Too many parts in EnemyIndex"));
+        // Split from the right so that UUID (which may contain dashes) stays intact.
+        let parts: Vec<&str> = s.rsplitn(3, '-').collect();
+        if parts.len() != 3 {
+            return Err(serde::de::Error::custom("Invalid EnemyIndex format"));
         }
+        let enemy_index = parts[0]
+            .parse::<usize>()
+            .map_err(serde::de::Error::custom)?;
+        let spawner_index = parts[1]
+            .parse::<usize>()
+            .map_err(serde::de::Error::custom)?;
+        let spawner_uuid = Uuid::parse_str(parts[2])
+            .map_err(serde::de::Error::custom)?;
         Ok(EnemyIndex {
             spawner_uuid,
             spawner_index,
