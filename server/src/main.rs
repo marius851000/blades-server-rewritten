@@ -38,6 +38,7 @@ mod global_gift;
 mod global_shop;
 mod inventory;
 mod json_db;
+mod leaderboards;
 pub mod models;
 mod quest;
 pub mod schema;
@@ -209,6 +210,7 @@ async fn main() -> Result<()> {
                     .service(character_data::update_data)
                     .service(daily_reward::get_daily_reward)
                     .service(announcements::get_announcements)
+                    .service(leaderboards::get_leaderboard)
                     .service(
                         Files::new(
                             "/bundles.blades.bgs.services/",

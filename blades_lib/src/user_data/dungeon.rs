@@ -187,8 +187,7 @@ impl<'de> Deserialize<'de> for EnemyIndex {
         let spawner_index = parts[1]
             .parse::<usize>()
             .map_err(serde::de::Error::custom)?;
-        let spawner_uuid = Uuid::parse_str(parts[2])
-            .map_err(serde::de::Error::custom)?;
+        let spawner_uuid = Uuid::parse_str(parts[2]).map_err(serde::de::Error::custom)?;
         Ok(EnemyIndex {
             spawner_uuid,
             spawner_index,
