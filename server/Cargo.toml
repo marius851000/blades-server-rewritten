@@ -23,4 +23,5 @@ futures-util = "0.3.32"
 bb8 = "0.9.1"
 actix-ws = { version = "0.4.0", features = ["serde", "serde-json"] }
 tokio-stream = "0.1.18"
-tokio-enet = "0.1.0"
+#tokio-enet = "0.1.0"
+tokio-enet = { git = "https://github.com/marius851000/tokio-enet.git", branch = "multiplatform" }
