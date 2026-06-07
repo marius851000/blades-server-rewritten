@@ -20,6 +20,7 @@ This is a re‑implementation of the Blades server, as documented via reverse‑
 7. Android: build a patched APK that trust user‑installed certs:
    - generate an APK from the app and copy it to `build-app/source-package.apk`.
    - Run `build_patched_apk.sh`
+   - Install the generated APK
 8. Run the server (finally): Run `cargo run -- run --connection-string "<same as DATABASE_URL in .env>" --host 127.0.0.1 --port 8000 --static-data ./data --enet-listen-addr 127.0.0.1:8001 --enet-public-addr <machine network/public IP>:8001`
 
 ## Some SQL notes:
