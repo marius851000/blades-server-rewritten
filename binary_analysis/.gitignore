@@ -1,0 +1,4 @@
+ghidra_script/*
+!ghidra_script/*.java
+!ghidra_script/*.py
+!ghidra_script/*.md
